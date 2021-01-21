@@ -11,6 +11,8 @@ from pupil_apriltags import Detector
 import time
 import math
 
+at_detector = Detector(families='tag36h11',nthreads=1,quad_decimate=1.0,quad_sigma=0.0,refine_edges=1,decode_sharpening=0.25,debug=0)
+
 class HIRO():
     def __init__(self):
         #uArm
@@ -72,7 +74,27 @@ class HIRO():
         '''
         Localizes fiducial assocalted with fid_num in workspace frame
         '''
-        
+        # conversion factor current height (assume height hasn't changed since last capture)
+        pixel2mm = self.position[2,0]*0.001138
+        #detect fiducials
+        tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
+        # pick out location of desired fiducial 
+        for tag in tags: # for each tag detected
+            if tag.tag_id == fid_num: # if its the tag we are lookig for
+                p_cam = tag.center # fiducial position in camera FoV
+                break
+        # frame with origin centered in FoV
+        p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
+        p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
+        # wrist frame
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+50], [1]]) # use array now so next step is easier
+        # workspace frame
+        phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
+        T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
+                      [np.sin(phi),  np.cos(phi), self.position[1,0]],
+                      [          0,            0,                 1]])
+        p_work = T@p_wrist
+        return (p_work[0,0], p_work[1,0])
     
     #--------------------------------------------------------------------------
     # beep
