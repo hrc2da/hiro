@@ -42,7 +42,7 @@ class HIRO():
         angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi
         self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True)
         self.arm.set_wrist(angle,wait=True)
-        self.positon = pos #update position
+        self.position = pos #update position
         
     def pick_place(self, start, end):
         '''
