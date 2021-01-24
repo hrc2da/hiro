@@ -14,7 +14,7 @@ import math
 at_detector = Detector(families='tag36h11',nthreads=1,quad_decimate=1.0,quad_sigma=0.0,refine_edges=1,decode_sharpening=0.25,debug=0)
 
 class HIRO():
-    def __init__(self):
+    def __init__(self, mute=False):
         #uArm
         self.arm = pyuarm.UArm()
         self.arm.connect()
@@ -22,7 +22,8 @@ class HIRO():
         self.ground = 62 # z value to touch suction cup to ground 
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
-        #camera
+        self.mute = mute # controls if sounds are made of not
+        # camera
         self.camera = PiCamera() #camera
         self.view = None #most recent camera image captured
     
@@ -72,7 +73,7 @@ class HIRO():
     
     def localize_fiducial(self, fid_num):
         '''
-        Localizes fiducial assocalted with fid_num in workspace frame
+        Localizes center of fiducial assocalted with fid_num in workspace frame
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
         pixel2mm = self.position[2,0]*0.001138
@@ -94,8 +95,43 @@ class HIRO():
                       [np.sin(phi),  np.cos(phi), self.position[1,0]],
                       [          0,            0,                 1]])
         p_work = T@p_wrist
-        return (p_work[0,0], p_work[1,0])
+        return (p_work[0,0], p_work[1,0]) #[mm]
     
+    def localize_notecard(self, fid_num, beta=0):
+        '''
+        localizes notecard given the fiducial ID and the angle of the notecard measured
+        CCW from the workspace x-axis
+        Requires that the desired fiducial is in the current view
+        '''
+        # measure l and k on caibration card
+        l = 23.4 # horizontal distance from card cener to fiducial center [mm]
+        k = 13.5 # vertical distance from card cener to fiducial center [mm]
+        P_f = self.localize_fiducial(fid_num) #locaiton of fiducial center
+        x_nc = P_f[0]-l*np.cos(beta)+k*np.sin(beta)
+        y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
+        return (x_nc, y_nc)
+    
+    def find_new_card(self, seen):
+        '''
+        takes in list of seen fiducial IDs and keeps looking for a new one
+        with the camera until one is found and that ID is retunred
+        '''
+        search_pos = np.array([[0],[280],[200]]) # spot to wait at for new card
+        self.move(search_pos)
+        newfound = False
+        self.beep(1) # alert the user of readyness
+        while not newfound:
+            self.capture('/home/pi/hiro/views/test.jpg') # take a picture
+            tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
+            for tag in tags: # for each tag detected
+                if tag.tag_id not in seen:
+                    new_id = tag.tag_id
+                    self.beep(3)
+                    newfound = True
+                    break
+        return new_id
+            
+        
     #--------------------------------------------------------------------------
     # beep
     #--------------------------------------------------------------------------
@@ -106,24 +142,26 @@ class HIRO():
         0: there is a problem
         1: requesting something from user
         2: warning user that arm is about to move
+        3: new card detected
         '''
-        if type == 0:
-            self.arm.set_buzzer(800, 0.4, wait=True)
-            self.arm.set_buzzer(600, 0.5, wait=True)
-            self.arm.set_buzzer(400, 0.6, wait=True)
-        elif type == 1:
-            self.arm.set_buzzer(600, 0.3, wait=True)
-            self.arm.set_buzzer(900, 0.3, wait=True)
-            self.arm.set_buzzer(600, 0.3, wait=True)
-            self.arm.set_buzzer(900, 0.3, wait=True)
-            self.arm.set_buzzer(600, 0.3, wait=True)
-            self.arm.set_buzzer(900, 0.3, wait=True)
-        elif type == 2:
-            self.arm.set_buzzer(500, 0.5, wait=True)
-            self.arm.set_buzzer(300, 0.5, wait=True)
-            self.arm.set_buzzer(1000, 0.5, wait=True)
-        else:
-            self.arm.set_buzzer(900, 1, wait=True)
+        if not self.mute:
+            if type == 0:
+                self.arm.set_buzzer(800, 0.4, wait=True)
+                self.arm.set_buzzer(600, 0.5, wait=True)
+                self.arm.set_buzzer(400, 0.6, wait=True)
+            elif type == 1:
+                self.arm.set_buzzer(600, 0.3, wait=True)
+                self.arm.set_buzzer(900, 0.3, wait=True)
+                self.arm.set_buzzer(600, 0.3, wait=True)
+                self.arm.set_buzzer(900, 0.3, wait=True)
+                self.arm.set_buzzer(600, 0.3, wait=True)
+                self.arm.set_buzzer(900, 0.3, wait=True)
+            elif type == 2:
+                self.arm.set_buzzer(500, 0.5, wait=True)
+                self.arm.set_buzzer(300, 0.5, wait=True)
+                self.arm.set_buzzer(1000, 0.5, wait=True)
+            elif type == 3:
+                self.arm.set_buzzer(900, .25, wait=True)
     
     
     
