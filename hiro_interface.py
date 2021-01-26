@@ -41,7 +41,12 @@ class HIRO():
         pos is a numpy array in the form [[x],[y],[z]]
         '''
         angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi
-        self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True)
+        if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
+            pass
+        else:
+            # warnng for if move doesn't happen
+            print('Requested move not possible!')
+            self.beep(0)
         self.arm.set_wrist(angle,wait=True)
         self.position = pos #update position
         
@@ -119,6 +124,7 @@ class HIRO():
         search_pos = np.array([[0],[280],[200]]) # spot to wait at for new card
         self.move(search_pos)
         newfound = False
+        print("place next card in FoV")
         self.beep(1) # alert the user of readyness
         while not newfound:
             self.capture('/home/pi/hiro/views/test.jpg') # take a picture
@@ -126,7 +132,7 @@ class HIRO():
             for tag in tags: # for each tag detected
                 if tag.tag_id not in seen:
                     new_id = tag.tag_id
-                    self.beep(3)
+                    self.beep(3) #alert new card detercted
                     newfound = True
                     break
         return new_id
