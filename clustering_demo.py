@@ -27,6 +27,7 @@ for card_num in range(6): # 6 cards in each cluster
         seen.append(new_id)
         print("card {} seen".format(new_id))
         new_loc = hiro.localize_notecard(new_id) #location of new card
+        print(new_loc)
         #time.sleep(1) # give user a second to put down card
         hiro.beep(2) # warn that motion is aboout to hapen
         des_loc = cluster[card_num]

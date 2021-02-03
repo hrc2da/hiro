@@ -35,34 +35,49 @@ class HIRO():
     # basic movements
     #--------------------------------------------------------------------------
     
-    def move(self, pos):
+    def move(self, pos, wrist_mode=0, wrist_angle=0):
         '''
-        move arm to pos while maintaing the angle of the end effector
         pos is a numpy array in the form [[x],[y],[z]]
+        wristmode determines how wrist position changes at end of move:
+            0: wrist doesn't move
+            1: wrist is moved to wristangle
+            2: wrist is moved to be facing straight in the worspace accounting for the arm angle
+            3: wrist is moved to be facing straight + wristangle
         '''
-        angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi
+        # move arm
         if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
-            pass
+            self.position = pos #update position
         else:
             # warnng for if move doesn't happen
             print('Requested move not possible!')
             self.beep(0)
-        self.arm.set_wrist(angle,wait=True)
-        self.position = pos #update position
+        # move wrist
+        if wrist_mode==0: # no wrist movement requested
+            pass
+        elif wrist_mode==1: # specified relative angle
+            self.arm.set_wrist(wrist_angle,wait=True)
+        elif wrist_mode==2: 
+            angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi #calculate angle to face wrist forward
+            self.arm.set_wrist(angle,wait=True)
+        else: # specified absolute angle
+            angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi-wrist_angle #calculate desired angle
+            self.arm.set_wrist(angle,wait=True)
+            
         
     def pick_place(self, start, end):
         '''
         picks up card at start and puts it at end
-        start and end are tuples of form (x,y)
+        start and end are tuples of form (x,y,angle) and (x,y) respectively
+        angle is measured CCW from workspace x axis
         '''
-        self.move(np.array([[start[0]],[start[1]],[self.ground+20]])) # hover over start
-        self.move(np.array([[start[0]],[start[1]],[self.ground]])) #drop to start
+        self.move(np.array([[start[0]],[start[1]],[self.ground+30]]), wrist_mode=3, wrist_angle=start[2]) # hover over start
+        self.move(np.array([[start[0]],[start[1]],[self.ground]]), wrist_mode=0) #drop to start
         self.arm.set_pump(True) #grab card
-        self.move(np.array([[start[0]],[start[1]],[self.ground+50]])) # lift card up so it doesn't mess up other cards
-        self.move(np.array([[end[0]],[end[1]],[self.ground+50]])) # hover over end
-        self.move(np.array([[end[0]],[end[1]],[self.ground+10]])) # lower over end
+        self.move(np.array([[start[0]],[start[1]],[self.ground+50]]), wrist_mode=0) # lift card up so it doesn't mess up other cards
+        self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=2) # hover over end
+        self.move(np.array([[end[0]],[end[1]],[self.ground+10]]), wrist_mode=0) # lower over end
         self.arm.set_pump(False) #drop card
-        self.move(np.array([[end[0]],[end[1]],[self.ground+50]])) # lift up to get out of the way
+        self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=0) # lift up to get out of the way
     
     #--------------------------------------------------------------------------
     # fiducial localization / transformations
@@ -79,6 +94,7 @@ class HIRO():
     def localize_fiducial(self, fid_num):
         '''
         Localizes center of fiducial assocalted with fid_num in workspace frame
+        returns tuple of form (x, y, angle)
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
         pixel2mm = self.position[2,0]*0.001138
@@ -88,6 +104,8 @@ class HIRO():
         for tag in tags: # for each tag detected
             if tag.tag_id == fid_num: # if its the tag we are lookig for
                 p_cam = tag.center # fiducial position in camera FoV
+                (ptA, ptB, ptC, ptD) = tag.corners # locations of four corners in camera FoV
+                beta_cam = np.arctan2(ptB[1]-ptA[1], ptB[0]-ptA[0])*180/math.pi #fiducial angle in camera frame
                 break
         # frame with origin centered in FoV
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
@@ -100,21 +118,27 @@ class HIRO():
                       [np.sin(phi),  np.cos(phi), self.position[1,0]],
                       [          0,            0,                 1]])
         p_work = T@p_wrist
-        return (p_work[0,0], p_work[1,0]) #[mm]
+        # convert fiducial angle to world view angle
+        beta_work = 180 + beta_cam - np.arctan2(self.position[0,0], self.position[1,0])*180/math.pi
+        if beta_work > 180:
+            beta_work = beta_work-360 # angle correction
+        return (p_work[0,0], p_work[1,0], -beta_work) #[mm]
     
-    def localize_notecard(self, fid_num, beta=0):
+    def localize_notecard(self, fid_num):
         '''
         localizes notecard given the fiducial ID and the angle of the notecard measured
         CCW from the workspace x-axis
         Requires that the desired fiducial is in the current view
+        returns tuple of form (x, y, angle)
         '''
         # measure l and k on caibration card
         l = 23.4 # horizontal distance from card cener to fiducial center [mm]
         k = 13.5 # vertical distance from card cener to fiducial center [mm]
         P_f = self.localize_fiducial(fid_num) #locaiton of fiducial center
+        beta = P_f[2]*math.pi/180 #convert to radians
         x_nc = P_f[0]-l*np.cos(beta)+k*np.sin(beta)
         y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
-        return (x_nc, y_nc)
+        return (x_nc, y_nc, P_f[2]) # angle remains the same
     
     def find_new_card(self, seen):
         '''
@@ -122,7 +146,7 @@ class HIRO():
         with the camera until one is found and that ID is retunred
         '''
         search_pos = np.array([[0],[280],[200]]) # spot to wait at for new card
-        self.move(search_pos)
+        self.move(search_pos, wrist_mode=2)
         newfound = False
         print("place next card in FoV")
         self.beep(1) # alert the user of readyness
