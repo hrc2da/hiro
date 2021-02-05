@@ -37,6 +37,18 @@ for card_num in range(6): # 6 cards in each cluster
 hiro.move(np.array([[0], [200], [200]]))
 print('all done')
 
+#clean up
+input("Press Enter to clean up")
+
+pile = (0, 190) # put all cards in first card spot
+for card_num in range(6): # 6 cards in each cluster
+    for cluster in cluster_centers:
+        cluster_loc = cluster[card_num]
+        loc = (cluster_loc[0], cluster_loc[1], 0) # assume all cards are horizontal
+        hiro.pick_place(loc, pile)
+
+hiro.move(np.array([[0], [200], [200]]))
+
 hiro.disconnect()
 
 
