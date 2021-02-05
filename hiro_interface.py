@@ -44,13 +44,6 @@ class HIRO():
             2: wrist is moved to be facing straight in the worspace accounting for the arm angle
             3: wrist is moved to be facing straight + wristangle
         '''
-        # move arm
-        if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
-            self.position = pos #update position
-        else:
-            # warnng for if move doesn't happen
-            print('Requested move not possible!')
-            self.beep(0)
         # move wrist
         if wrist_mode==0: # no wrist movement requested
             pass
@@ -62,6 +55,15 @@ class HIRO():
         else: # specified absolute angle
             angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi-wrist_angle #calculate desired angle
             self.arm.set_wrist(angle,wait=True)
+        # move arm
+        if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
+            self.position = pos #update position
+            return True # move successful
+        else:
+            # warnng for if move doesn't happen
+            print('Requested move not possible!')
+            self.beep(0)
+            return False # move unsuccessful
             
         
     def pick_place(self, start, end):
@@ -69,15 +71,23 @@ class HIRO():
         picks up card at start and puts it at end
         start and end are tuples of form (x,y,angle) and (x,y) respectively
         angle is measured CCW from workspace x axis
+        returns true iff all moves were successful
         '''
-        self.move(np.array([[start[0]],[start[1]],[self.ground+30]]), wrist_mode=3, wrist_angle=start[2]) # hover over start
-        self.move(np.array([[start[0]],[start[1]],[self.ground]]), wrist_mode=0) #drop to start
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground+30]]), wrist_mode=3, wrist_angle=start[2]): # hover over start
+            return False
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground]]), wrist_mode=0): #drop to start
+            return False
         self.arm.set_pump(True) #grab card
-        self.move(np.array([[start[0]],[start[1]],[self.ground+50]]), wrist_mode=0) # lift card up so it doesn't mess up other cards
-        self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=2) # hover over end
-        self.move(np.array([[end[0]],[end[1]],[self.ground+10]]), wrist_mode=0) # lower over end
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground+50]]), wrist_mode=0): # lift card up so it doesn't mess up other cards
+            return False
+        if not self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=2): # hover over end
+            return False
+        if not self.move(np.array([[end[0]],[end[1]],[self.ground+10]]), wrist_mode=0): # lower over end
+            return False
         self.arm.set_pump(False) #drop card
-        self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=0) # lift up to get out of the way
+        if not self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=0): # lift up to get out of the way
+            return False
+        return True # pick-place movements successful
     
     #--------------------------------------------------------------------------
     # fiducial localization / transformations
