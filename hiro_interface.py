@@ -43,6 +43,7 @@ class HIRO():
             1: wrist is moved to wristangle
             2: wrist is moved to be facing straight in the worspace accounting for the arm angle
             3: wrist is moved to be facing straight + wristangle
+        returns False if move is not possible
         '''
         # move wrist
         if wrist_mode==0: # no wrist movement requested
@@ -56,14 +57,19 @@ class HIRO():
             angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi-wrist_angle #calculate desired angle
             self.arm.set_wrist(angle,wait=True)
         # move arm
-        if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
-            self.position = pos #update position
-            return True # move successful
+        if np.array_equal(pos, self.position): # no move required
+            # the seet_position() fucntion returns false if the command is already the position
+            # so return True here to avoid unintenionally throwing a movement failure message
+            return True
         else:
-            # warnng for if move doesn't happen
-            print('Requested move not possible!')
-            self.beep(0)
-            return False # move unsuccessful
+            if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
+                self.position = pos #update position
+                return True # move successful
+            else:
+                # warnng for if move doesn't happen
+                print('Requested move not possible!')
+                self.beep(0)
+                return False # move unsuccessful
             
         
     def pick_place(self, start, end):
@@ -161,7 +167,7 @@ class HIRO():
         print("place next card in FoV")
         self.beep(1) # alert the user of readyness
         while not newfound:
-            self.capture('/home/pi/hiro/views/test.jpg') # take a picture
+            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
             tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
             for tag in tags: # for each tag detected
                 if tag.tag_id not in seen:
