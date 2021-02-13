@@ -13,6 +13,7 @@ heights = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 2
 for z in heights:
     hiro.move(np.array([[0], [200], [z]]))
     #print(z)
+    time.sleep(0.5) # wait for arm to stop shaking
     hiro.capture('/home/pi/Desktop/calibration/%d.jpg' % z)
 
 hiro.disconnect()

@@ -79,7 +79,7 @@ class HIRO():
         angle is measured CCW from workspace x axis
         returns true iff all moves were successful
         '''
-        if not self.move(np.array([[start[0]],[start[1]],[self.ground+30]]), wrist_mode=3, wrist_angle=start[2]): # hover over start
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground+40]]), wrist_mode=3, wrist_angle=start[2]): # hover over start
             return False
         if not self.move(np.array([[start[0]],[start[1]],[self.ground]]), wrist_mode=0): #drop to start
             return False
@@ -113,7 +113,7 @@ class HIRO():
         returns tuple of form (x, y, angle)
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
-        pixel2mm = self.position[2,0]*0.001138
+        pixel2mm = self.position[2,0]*0.001171
         #detect fiducials
         tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
         # pick out location of desired fiducial 
@@ -127,7 +127,7 @@ class HIRO():
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
         # wrist frame
-        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+50], [1]]) # use array now so next step is easier
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+40], [1]]) # use array now so next step is easier
         # workspace frame
         phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],

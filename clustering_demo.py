@@ -53,7 +53,7 @@ for card_num in range(6): # 6 cards in each cluster
             loc = (cluster_loc[0], cluster_loc[1], 0) # assume all cards are horizontal
             hiro.pick_place(loc, pile)
         else:
-            first = false
+            first = False
 
 hiro.move(np.array([[0], [200], [200]]))
 
