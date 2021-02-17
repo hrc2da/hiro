@@ -71,7 +71,7 @@ try:
         # add the word vector to the allwords dict
         allwords[new_word] = new_embedding
         notecards[new_word] = new_id
-        word2loc[new_word] = new_loc
+        word2loc[new_word] = new_loc[:2]
         if len(allwords.items())<=k:
             # just put the card in the next open cluster
             cluster_id = len(allwords.items())-1
@@ -119,7 +119,7 @@ try:
                                 if des_cluster == original_des_cluster:
                                     raise ValueError("There are no open spots!")
                         des_loc = cluster_centers[des_cluster][des_cluster_loc]
-                        
+                    print(f'trying to pick from {new_loc} and send to {des_loc}')
                     while not hiro.pick_place(new_loc, des_loc):
                         # if card can't be reached keep teeling user to move it
                         print('Please move card closer')
