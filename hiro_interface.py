@@ -127,7 +127,7 @@ class HIRO():
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
         # wrist frame
-        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+20], [1]]) # use array now so next step is easier
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+40], [1]]) # use array now so next step is easier
         # workspace frame
         phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
@@ -161,7 +161,7 @@ class HIRO():
         takes in list of seen fiducial IDs and keeps looking for a new one
         with the camera until one is found and that ID is retunred
         '''
-        search_pos = np.array([[0],[280],[200]]) # spot to wait at for new card
+        search_pos = np.array([[0],[290],[110]]) # spot to wait at for new card
         self.move(search_pos, wrist_mode=2)
         newfound = False
         print("place next card in FoV")
