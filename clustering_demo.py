@@ -98,7 +98,7 @@ try:
                     new_loc = hiro.localize_notecard(new_id)
                     des_cluster = i
                     des_cluster_loc = j
-                    if new_clusters[i,j] is None:
+                    if new_clusters[i][j] is None:
                         # if the spot is open, then
                         # place card there
                         des_loc = clusters[des_cluster][des_cluster_loc]
