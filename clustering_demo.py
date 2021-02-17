@@ -71,6 +71,7 @@ try:
         # add the word vector to the allwords dict
         allwords[new_word] = new_embedding
         notecards[new_word] = new_id
+        word2loc[new_word] = new_loc
         if len(allwords.items())<k:
             # just put the card in the next open cluster
             cluster_id = len(allwords.items())-1
@@ -95,7 +96,7 @@ try:
             for i,wordlist in enumerate(clusters):
                 for j,word in enumerate(wordlist):
                     new_id = notecards[word]
-                    new_loc = hiro.localize_notecard(new_id)
+                    new_loc = word2loc[word]
                     des_cluster = i
                     des_cluster_loc = j
                     if new_clusters[i][j] is None:
