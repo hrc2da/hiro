@@ -96,7 +96,7 @@ try:
             for i,wordlist in enumerate(clusters):
                 for j,word in enumerate(wordlist):
                     new_id = notecards[word]
-                    new_loc = word2loc[word] + [0]
+                    new_loc = (word2loc[word][0], word2loc[word][1], 0)
                     des_cluster = i
                     des_cluster_loc = j
                     if new_clusters[i][j] is None:
