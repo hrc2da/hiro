@@ -73,7 +73,7 @@ try:
         notecards[new_word] = new_id
         if len(allwords.items())<k:
             # just put the card in the next open cluster
-            cluster_id = len(allwords.items()-1)
+            cluster_id = len(allwords.items())-1
             cluster = cluster_centers[cluster_id]
             des_loc = cluster[0] # desired location is the first spot in the open cluster
             while not hiro.pick_place(new_loc, des_loc):
