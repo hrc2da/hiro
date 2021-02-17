@@ -87,7 +87,7 @@ try:
             current_clusters[cluster_id][0] = new_word
         else:
             # get new clusters and rearrange cards
-            clusters = parser.txt2clusters(allwords.keys(),k=k)
+            clusters = parser.txt2clusters(list(allwords.keys()),k=k)
             new_clusters = copy(current_clusters)
             print(clusters)
             # assign words in each cluster to a location
