@@ -24,7 +24,7 @@ class HIRO():
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
         # camera
-        self.camera = PiCamera() #camera
+        self.camera = PiCamera(resolution=(1024,768)) #camera
         self.view = None #most recent camera image captured
     
     def disconnect(self):
