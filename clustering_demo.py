@@ -102,7 +102,7 @@ try:
                     if new_clusters[i][j] is None:
                         # if the spot is open, then
                         # place card there
-                        des_loc = clusters[des_cluster][des_cluster_loc]
+                        des_loc = cluster_centers[des_cluster][des_cluster_loc]
                     else:
                         # if the spot is not open,
                         # try to find an open spot
@@ -118,7 +118,7 @@ try:
                                 des_cluster = (des_cluster + 1) % k 
                                 if des_cluster == original_des_cluster:
                                     raise ValueError("There are no open spots!")
-                        des_loc = clusters[des_cluster][des_cluster_loc]
+                        des_loc = cluster_centers[des_cluster][des_cluster_loc]
                         
                     while not hiro.pick_place(new_loc, des_loc):
                         # if card can't be reached keep teeling user to move it
