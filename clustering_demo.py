@@ -72,7 +72,7 @@ try:
         allwords[new_word] = new_embedding
         notecards[new_word] = new_id
         word2loc[new_word] = new_loc
-        if len(allwords.items())<k:
+        if len(allwords.items())<=k:
             # just put the card in the next open cluster
             cluster_id = len(allwords.items())-1
             cluster = cluster_centers[cluster_id]
@@ -118,7 +118,7 @@ try:
                                 des_cluster = (des_cluster + 1) % k 
                                 if des_cluster == original_des_cluster:
                                     raise ValueError("There are no open spots!")
-                        
+                        des_loc = clusters[des_cluster][des_cluster_loc]
                         
                     while not hiro.pick_place(new_loc, des_loc):
                         # if card can't be reached keep teeling user to move it
@@ -127,7 +127,7 @@ try:
                         new_id = hiro.find_new_card(seen) # id of new card
                         new_loc = hiro.localize_notecard(new_id) # new location of new card
                         seen.append(new_id)
-                        word2loc[new_word] = (des_cluster,des_cluster_loc)
+                        word2loc[new_word] = cluster_centers[des_cluster][des_cluster_loc]
                         new_clusters[des_cluster][des_cluster_loc] = word
 
 
