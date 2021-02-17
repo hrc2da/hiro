@@ -126,9 +126,9 @@ try:
                         time.sleep(5) # give the user some time to move card
                         new_id = hiro.find_new_card(seen) # id of new card
                         new_loc = hiro.localize_notecard(new_id) # new location of new card
-                        seen.append(new_id)
-                        word2loc[new_word] = cluster_centers[des_cluster][des_cluster_loc]
-                        new_clusters[des_cluster][des_cluster_loc] = word
+                    seen.append(new_id)
+                    word2loc[new_word] = cluster_centers[des_cluster][des_cluster_loc]
+                    new_clusters[des_cluster][des_cluster_loc] = word
 
 
                     
