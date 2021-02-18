@@ -72,6 +72,7 @@ try:
         allwords[new_word] = new_embedding
         notecards[new_word] = new_id
         word2loc[new_word] = new_loc[:2]
+        print(f"added {new_word} at {word2loc[new_word]}")
         if len(allwords.items())<=k:
             # just put the card in the next open cluster
             cluster_id = len(allwords.items())-1
