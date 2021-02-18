@@ -6,15 +6,16 @@ import pyuarm
 import numpy as np
 import cv2
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw, ImageFont
 from pupil_apriltags import Detector
 import time
 import math
+import subprocess
 
 at_detector = Detector(families='tag36h11',nthreads=1,quad_decimate=1.0,quad_sigma=0.0,refine_edges=1,decode_sharpening=0.25,debug=0)
 
 class HIRO():
-    def __init__(self, mute=False):
+    def __init__(self, mute=False, projector=True):
         #uArm
         self.arm = pyuarm.UArm()
         self.arm.connect()
@@ -23,13 +24,14 @@ class HIRO():
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
+        self.projector = projector # controls if projections are made or not
         # camera
         self.camera = PiCamera(resolution=(1024,768)) #camera
         self.view = None #most recent camera image captured
-    
+        
     def disconnect(self):
-        #disconnect uArm
-        self.arm.disconnect()
+        self.arm.disconnect() #disconnect uArm
+        cv2.destroyAllWindows() # close projection
     
     #--------------------------------------------------------------------------
     # basic movements
@@ -208,6 +210,33 @@ class HIRO():
                 self.arm.set_buzzer(1000, 0.5, wait=True)
             elif type == 3:
                 self.arm.set_buzzer(900, .25, wait=True)
-    
-    
-    
+                
+    #--------------------------------------------------------------------------
+    # Projector
+    #--------------------------------------------------------------------------
+    def project(self, string=''):
+        #projects an image if in project mode set in instantiation
+        #projects a black screen by default
+        if self.project:
+            # generate image
+            image_width = 864
+            image_height = 480
+            img = Image.new('RGB', (image_width, image_height), color=(0, 0, 0)) #black bakground
+            canvas = ImageDraw.Draw(img) # create the canvas
+            font_size = int(round(1300/(len(string)+1))) # adaptive font size
+            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeMono.ttf", size=font_size)
+            text_width, text_height = canvas.textsize(string, font=font)
+            x_pos = int((image_width - text_width) / 2)
+            y_pos = int((image_height - text_height) / 2)
+            canvas.text((x_pos, y_pos), string, font=font, fill='#FFFFFF')
+            img = img.rotate(180) #make it right-side-up
+            img.save('/home/pi/hiro/projections/new_proj.jpg')
+            # full-screen projection
+            proj = cv2.imread('/home/pi/hiro/projections/new_proj.jpg')
+            cv2.startWindowThread()
+            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+            cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+            cv2.imshow("window", proj)
+            #cv2.waitKey()
+            
+            
