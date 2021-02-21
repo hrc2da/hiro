@@ -75,7 +75,7 @@ class NoteParser:
         for i,c in enumerate(clusters):
             clustered_words[c].append(wordset[i])
         print(clustered_words)
-        return clustered_words
+        return clusters, clustered_words
         
 
 
