@@ -13,9 +13,9 @@ from SamplePreprocessor import preprocess
 class FilePaths:
     "filenames and paths to data"
     fnCharList = 'SimpleHTR/model/charList.txt'
-    fnSummary = '../model/summary.json'
-    fnInfer = 'data/reading_imgs/sharpie_9.jpg'
-    fnCorpus = '../data/corpus.txt'
+    fnSummary = 'SimpleHTR/model/summary.json'
+    fnInfer = 'SimpleHTR/data/test.png'
+    fnCorpus = 'SimpleHTR/data/corpus.txt'
 
 
 def write_summary(charErrorRates, wordAccuracies):
@@ -101,7 +101,7 @@ def validate(model, loader):
 
 def infer(model, fnImg):
     "recognize text in image provided by file path"
-    # import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
     img = preprocess(cv2.imread(fnImg, cv2.IMREAD_GRAYSCALE), Model.imgSize)
     batch = Batch(None, [img])
     (recognized, probability) = model.inferBatch(batch, True)

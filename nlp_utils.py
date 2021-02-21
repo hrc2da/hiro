@@ -28,7 +28,7 @@ class NoteParser:
 
 
     def load_htr_model(self):
-        self.htr = Model(open(self.htr_char_list_path).read(), decoderType=0, mustRestore=True, dump=False)
+        self.htr = Model(open(self.htr_char_list_path).read(), decoderType=DecoderType.WordBeamSearch, mustRestore=True, dump=False)
         
     def load_w2v_model(self):
         self.w2v = KeyedVectors.load(self.w2v_model_path)

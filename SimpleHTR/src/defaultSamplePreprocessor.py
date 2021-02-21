@@ -12,7 +12,7 @@ def preprocess(img, imgSize, dataAugmentation=False):
         img = np.zeros(imgSize[::-1])
 
     # data augmentation
-    # img = img.astype(np.float)
+    img = img.astype(np.float)
     if dataAugmentation:
         # photometric data augmentation
         if random.random() < 0.25:
@@ -52,36 +52,21 @@ def preprocess(img, imgSize, dataAugmentation=False):
     # no data augmentation
     else:
         # center image
-        padding = 50
-        img = img[padding:-padding,padding:-padding]
-        img = img.astype(np.float)
         wt, ht = imgSize
         h, w = img.shape
-        import pdb; pdb.set_trace()
         f = min(wt / w, ht / h)
         tx = (wt - w * f) / 2
         ty = (ht - h * f) / 2
-        # from matplotlib import pyplot as plt
-        # plt.imshow(img,cmap='gray')
-        # import pdb; pdb.set_trace()
+
         # map image into target image
         M = np.float32([[f, 0, tx], [0, f, ty]])
         target = np.ones(imgSize[::-1]) * 255 / 2
-        # import pdb; pdb.set_trace()
-        # _,image = cv2.threshold(img,140, 255, cv2.THRESH_BINARY)                    
-        # image = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,121,2)
-        
-        image = img
-        # img = cv2.warpAffine(image, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_CONSTANT, borderValue=255)
-        img = cv2.warpAffine(image, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT)
+        img = cv2.warpAffine(img, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT)
 
     # transpose for TF
     img = cv2.transpose(img)
-    import pdb; pdb.set_trace()
+
     # convert to range [-1, 1]
-    
-    # import pdb; pdb.set_trace()
-    # img = img/127.5 - 1
     img = img / 255 - 0.5
     return img
 
