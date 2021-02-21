@@ -64,6 +64,7 @@ class HIRO():
         if np.linalg.norm(pos-self.position) < no_move_tolerance: # no move required
             # the seet_position() fucntion returns false if the command is already the position
             # so return True here to avoid unintenionally throwing a movement failure message
+            print("moving to the same place! returning...")
             return True
         else:
             num_tries = 0
@@ -72,11 +73,12 @@ class HIRO():
                     self.position = pos #update position
                     return True # move successful
                 else:
+                    print("move failed, trying again!")
                     num_tries +=1
                 time.sleep(0.5)
             else:
                 # warnng for if move doesn't happen
-                print('Requested move not possible!')
+                print(f'Requested move to {pos} from {self.position} not possible!')
                 self.beep(0)
                 return False # move unsuccessful
             
