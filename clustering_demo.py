@@ -28,6 +28,8 @@ cluster_centers = [c0_centers, c1_centers, c2_centers, c3_centers, c4_centers]
 k = len(cluster_centers)
 seen = [] #ids of notecards already seen
 allwords = dict()
+wordorder = []
+cluster_indices = []
 notecards = dict()
 word2loc = dict() # dictionary of words to cluster locations tuple (cluster_id, center_id)
 current_clusters = [[None for c in range(cluster_capacity)] for i in range(k)]
@@ -55,6 +57,45 @@ current_clusters = [[None for c in range(cluster_capacity)] for i in range(k)]
 # 4. run clustering/pca on allwords
 # 5. reassign cards to locations based on clusters
 # 6. for each card, find card and move to new location if necessary
+
+
+def alignclusters(old_clusters,new_clusters):
+    # build a frequency table of mappings from old to new
+    # 0-0 111
+    # 0-1 1
+    # 0-2 0
+    # 1-0 1
+    # 1-1 0
+    # 1-2 1111
+    # 2-0 1111
+    # 2-1 11
+    # 2-2 0
+    # find the index of the max
+    # assign that mapping
+    # zero out the others in the same slots
+    # repeat
+    n_clusters = np.max(old_clusters)
+    old2newmappings = np.zeros((n_clusters,n_clusters))
+    for i,new_cluster_id in enumerate(new_clusters):
+        old2newmappings[old_clusters[i]][new_cluster_id] += 1
+    
+    remappings = np.zeros(n_clusters)
+
+    for i in range(n_clusters):
+        current_max_index = np.unravel_index(old2newmappings.argmax(), old2newmappings.shape)
+        old,new = current_max_index
+        remappings[new] = old
+        # now zero out the row and column 
+        old2newmappings[old,:] = 0
+        old2newmappings[:,new] = 0
+
+    new_clusters = []
+    for cid in new_clusters:
+        new_clusters.append(remappings[cid])
+    return new_clusters
+
+
+
 try:
     while len(allwords.items()) < k*cluster_capacity:
         # wait for card (blocking)
@@ -70,12 +111,14 @@ try:
             continue
         # add the word vector to the allwords dict
         allwords[new_word] = new_embedding
+        wordorder.append(new_word)
         notecards[new_word] = new_id
         word2loc[new_word] = new_loc[:2]
         print(f"added {new_word} at {word2loc[new_word]}")
-        if len(allwords.items())<=k:
+        if len(wordorder)<=k:
             # just put the card in the next open cluster
-            cluster_id = len(allwords.items())-1
+            cluster_id = len(wordorder)-1
+            cluster_indices.append(cluster_id)
             cluster = cluster_centers[cluster_id]
             des_loc = cluster[0] # desired location is the first spot in the open cluster
             while not hiro.pick_place(new_loc, des_loc):
@@ -89,10 +132,25 @@ try:
             current_clusters[cluster_id][0] = new_word
         else:
             # get new clusters and rearrange cards
-            clusters = parser.txt2clusters(list(allwords.keys()),k=k)
+            # clusters, new_cluster_indices = parser.txt2clusters(wordorder,k=k)
+            clusters = parser.txt2clusters(wordorder,k=k)
+            # remapped_cluster_indices = alignclusters(cluster_indices, new_cluster_indices)
+            
+            # for word_index, cluster in enumerate(remapped_cluster_indices):
+            #     if cluster == cluster_indices[word_index]:
+            #         continue
+            #     else:
+            #         # otherwise, move the card to the new cluster
+
+
+
+
             new_clusters = copy(current_clusters)
             print(clusters)
             # assign words in each cluster to a location
+            
+
+
             # the dumb way, just go in order
             for i,wordlist in enumerate(clusters):
                 for j,word in enumerate(wordlist):
