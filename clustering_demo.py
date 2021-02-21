@@ -133,7 +133,7 @@ def alignclusters(old_clusters,new_clusters):
 		# now zero out the row and column 
 		old2newmappings[old,:] = 0
 		old2newmappings[:,new] = 0
-	assert len(set(list(remappings)) == len(list(remappings))) # assert that all mappings are unique
+	assert len(set(list(remappings))) == len(list(remappings)) # assert that all mappings are unique
 	remapped_clusters = []
 	for cid in new_clusters:
 		remapped_clusters.append(remappings[cid])
