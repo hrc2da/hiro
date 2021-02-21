@@ -24,7 +24,9 @@ class HIRO():
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
+        #Projector
         self.projector = projector # controls if projections are made or not
+        self.project() # start with blank projection
         # camera
         self.camera = PiCamera(resolution=(1024,768)) #camera
         self.view = None #most recent camera image captured
@@ -168,6 +170,7 @@ class HIRO():
         self.move(search_pos, wrist_mode=2)
         newfound = False
         print("place next card in FoV")
+        self.project('place card above')
         self.beep(1) # alert the user of readyness
         while not newfound:
             self.capture('/home/pi/hiro/views/view.jpg') # take a picture
@@ -176,6 +179,7 @@ class HIRO():
                 if tag.tag_id not in seen:
                     new_id = tag.tag_id
                     self.beep(3) #alert new card detercted
+                    self.project() # blank projection
                     newfound = True
                     break
         return new_id
