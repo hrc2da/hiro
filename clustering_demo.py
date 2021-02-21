@@ -115,7 +115,7 @@ def alignclusters(old_clusters,new_clusters):
 	# zero out the others in the same slots
 	# repeat
 
-	n_clusters = np.max(old_clusters) + 1
+	n_clusters = int(np.max(old_clusters) + 1)
 	old_new_clusters = new_clusters[:-1] # get the new clusters for all but the new word
 	
 	old2newmappings = np.zeros((n_clusters,n_clusters))
