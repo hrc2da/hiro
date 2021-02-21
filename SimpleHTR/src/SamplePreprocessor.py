@@ -57,7 +57,6 @@ def preprocess(img, imgSize, dataAugmentation=False):
         img = img.astype(np.float)
         wt, ht = imgSize
         h, w = img.shape
-        import pdb; pdb.set_trace()
         f = min(wt / w, ht / h)
         tx = (wt - w * f) / 2
         ty = (ht - h * f) / 2
@@ -77,7 +76,6 @@ def preprocess(img, imgSize, dataAugmentation=False):
 
     # transpose for TF
     img = cv2.transpose(img)
-    import pdb; pdb.set_trace()
     # convert to range [-1, 1]
     
     # import pdb; pdb.set_trace()
