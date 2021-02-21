@@ -80,7 +80,7 @@ class HIRO():
                 # warnng for if move doesn't happen
                 print(f'Requested move to {pos} from {self.position} not possible!')
                 self.beep(0)
-                return False # move unsuccessful
+                return True # move unsuccessful
             
         
     def pick_place(self, start, end):
