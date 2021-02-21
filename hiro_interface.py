@@ -168,7 +168,7 @@ class HIRO():
     def find_new_card(self, seen, reposition = False,
                         search_pos = np.array([[0],[280],[200]]),
                         reading_pos = np.array([[0],[290],[90]]),
-                        reading_loc = (0,320)):
+                        reading_loc = (0,330)):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
         with the camera until one is found and that ID is retunred
