@@ -72,6 +72,7 @@ class HIRO():
             else:
                 # warnng for if move doesn't happen
                 print('Requested move not possible!')
+                import pdb; pdb.set_trace()
                 self.beep(0)
                 return False # move unsuccessful
             
