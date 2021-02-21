@@ -201,7 +201,7 @@ try:
 					new_loc = (word2loc[word][0], word2loc[word][1], 0) # get the loc of the card from fid
 					des_cluster = cluster
 					
-					potential_centers = cluster_centers[des_cluster]
+					potential_centers = cluster_centers[int(des_cluster)]
 					filled_centers = list(word2loc.values())
 					des_loc = get_neighboring_cluster_loc(potential_centers,filled_centers)
 					
