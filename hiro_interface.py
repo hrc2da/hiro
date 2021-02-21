@@ -129,7 +129,7 @@ class HIRO():
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
         # wrist frame
-        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+40], [1]]) # use array now so next step is easier
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+35], [1]]) # use array now so next step is easier
         # workspace frame
         phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
@@ -150,20 +150,21 @@ class HIRO():
         returns tuple of form (x, y, angle)
         '''
         # measure l and k on caibration card
-        l = 23.4 # horizontal distance from card cener to fiducial center [mm]
-        k = 13.5 # vertical distance from card cener to fiducial center [mm]
+        l = 22.5 # horizontal distance from card cener to fiducial center [mm]
+        k = 12.8 # vertical distance from card cener to fiducial center [mm]
         P_f = self.localize_fiducial(fid_num) #locaiton of fiducial center
         beta = P_f[2]*math.pi/180 #convert to radians
         x_nc = P_f[0]-l*np.cos(beta)+k*np.sin(beta)
         y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
         return (x_nc, y_nc, P_f[2]) # angle remains the same
     
-    def find_new_card(self, seen):
+    def find_new_card(self, seen, search_pos = np.array([[0],[280],[200]])):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
         with the camera until one is found and that ID is retunred
+        search_pos is the position the robot waits at while it searches
         '''
-        search_pos = np.array([[0],[290],[110]]) # spot to wait at for new card
+         # spot to wait at for new card
         self.move(search_pos, wrist_mode=2)
         newfound = False
         print("place next card in FoV")
