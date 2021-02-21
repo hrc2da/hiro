@@ -187,8 +187,8 @@ try:
 			remapped_cluster_indices = alignclusters(cluster_indices, new_cluster_indices)
 			
 			for word_index, cluster in enumerate(remapped_cluster_indices):
-				# if the new cluster assignment is the same as before, skip
-				if cluster == cluster_indices[word_index]:
+				# if the new cluster assignment is the same as before, skip (excepting the new word)
+				if word_index < len(cluster_indices) and cluster == cluster_indices[word_index]:
 					continue
 				# otherwise, move the card to the new cluster
 				else:
