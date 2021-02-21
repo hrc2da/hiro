@@ -15,13 +15,17 @@ def cropRectangle(img):
     kernel = np.ones((4,4),np.uint8)
     dilation = cv2.dilate(erosion,kernel,iterations = 2)
     
-    _,threshed = cv2.threshold(dilation, 100, 255, cv2.THRESH_BINARY)
+    _,threshed = cv2.threshold(dilation, 170, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(threshed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     rects = [cv2.boundingRect(cnt) for cnt in contours]
     filtered_rects = [rect for rect in rects if (rect[2] > 200 and rect[2] < 550 and rect[3] > 150 and rect[3] < 300 and rect[2]/rect[3] > 2)]
-    
-    filtered_rects = [rect for rect in rects if (rect[2] > 200 and rect[2] < 550 and rect[3] > 150 and rect[3] < 300 and rect[2]/rect[3] > 2)]
+    import matplotlib.pyplot as plt
+    import pdb
+    print(filtered_rects)
+    plt.imshow(img)
+    pdb.set_trace()
+    # filtered_rects = [rect for rect in rects if (rect[2] > 200 and rect[2] < 550 and rect[3] > 150 and rect[3] < 300 and rect[2]/rect[3] > 2)]
     if filtered_rects == False or len(filtered_rects) != 1:
         print("couldn't find the rectangle!")
     box = filtered_rects[0]
