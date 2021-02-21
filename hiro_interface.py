@@ -39,7 +39,7 @@ class HIRO():
     # basic movements
     #--------------------------------------------------------------------------
     
-    def move(self, pos, wrist_mode=0, wrist_angle=0, max_tries=5):
+    def move(self, pos, wrist_mode=0, wrist_angle=0, max_tries=5, no_move_tolerance=2):
         '''
         pos is a numpy array in the form [[x],[y],[z]]
         wristmode determines how wrist position changes at end of move:
@@ -61,7 +61,7 @@ class HIRO():
             angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi-wrist_angle #calculate desired angle
             self.arm.set_wrist(angle,wait=True)
         # move arm
-        if np.array_equal(pos, self.position): # no move required
+        if np.linalg.norm(pos-self.position) < no_move_tolerance: # no move required
             # the seet_position() fucntion returns false if the command is already the position
             # so return True here to avoid unintenionally throwing a movement failure message
             return True
