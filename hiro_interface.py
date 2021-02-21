@@ -121,7 +121,9 @@ class HIRO():
         #detect fiducials
         tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
         # pick out location of desired fiducial 
+        print(f'num_tags_detected: {len(tags)}')
         for tag in tags: # for each tag detected
+            print(f'detected tag: {tag.tag_id}')
             if tag.tag_id == fid_num: # if its the tag we are lookig for
                 p_cam = tag.center # fiducial position in camera FoV
                 (ptA, ptB, ptC, ptD) = tag.corners # locations of four corners in camera FoV
