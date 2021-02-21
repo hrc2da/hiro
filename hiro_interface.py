@@ -73,6 +73,7 @@ class HIRO():
                     return True # move successful
                 else:
                     num_tries +=1
+                time.sleep(0.5)
             else:
                 # warnng for if move doesn't happen
                 print('Requested move not possible!')
