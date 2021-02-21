@@ -53,7 +53,8 @@ def preprocess(img, imgSize, dataAugmentation=False):
     else:
         # center image
         padding = 50
-        img = img[padding:-padding,padding:-padding]
+        img = img[190:340,360:800]
+        # img = img[padding:-padding,padding:-padding]
         img = img.astype(np.float)
         wt, ht = imgSize
         h, w = img.shape
