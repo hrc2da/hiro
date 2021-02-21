@@ -131,7 +131,7 @@ class HIRO():
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
         # wrist frame
-        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+35], [1]]) # use array now so next step is easier
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+37], [1]]) # use array now so next step is easier
         # workspace frame
         phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
@@ -160,12 +160,43 @@ class HIRO():
         y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
         return (x_nc, y_nc, P_f[2]) # angle remains the same
     
-    def find_new_card(self, seen, search_pos = np.array([[0],[280],[200]])):
+    def find_new_card(self, seen, reposition = False,
+                        search_pos = np.array([[0],[280],[200]]),
+                        reading_pos = np.array([[0],[290],[110]]),
+                        reading_loc = (0,330)):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
         with the camera until one is found and that ID is retunred
         search_pos is the position the robot waits at while it searches
+        
+        seen: a list of fid ids that have already been detected
+        search_pos: broad FoV
+        reading_pos: narrow FoV
+        reading_loc: card location
+
+        position := robot pose
+        location := card location
+
+        param reposition = False
+
+        if reposition == False:
+        search_position == reading_location
+
+        1. go to the search position (broad FoV)
+        2. wait until a card enters the field of view
+        3. if reposition == False:
+            1. process and return   
+        4. else:
+            1. localize the card
+            2. pick up the card and move it to the reading location
+            3. return to the reading position (close to the table)
+            4. process and return
+
+
+
         '''
+        if reposition == False:
+            search_pos = reading_pos
          # spot to wait at for new card
         self.move(search_pos, wrist_mode=2)
         newfound = False
@@ -182,8 +213,18 @@ class HIRO():
                     self.project() # blank projection
                     newfound = True
                     break
-        return new_id
-            
+        if reposition == False:
+            return new_id
+        else:
+            cur_loc = self.localize_notecard(new_id)
+            self.pick_place(cur_loc, reading_loc)
+            self.move(reading_pos)
+            # recapture the image for reading the word.
+            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            # TODO: handle two failure modes possible here:
+            # 1) the pick failed, in this case go back to search_pos and look for it
+            # 2) the place was outside of some tolerance, in this case repick the card from view and replace it
+            # for now we are not checking if the place happened and is in the right location.
         
     #--------------------------------------------------------------------------
     # beep

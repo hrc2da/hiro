@@ -13,7 +13,7 @@ hiro = HIRO(mute=True)
 parser = NoteParser()
 temp_photo_path = '/home/pi/hiro/views/view.jpg'
 
-SEARCH_POSITION = np.array([[0],[290],[110]])
+
 
 # test fake clustering
 
@@ -99,7 +99,7 @@ def alignclusters(old_clusters,new_clusters):
 try:
     while len(allwords.items()) < k*cluster_capacity:
         # wait for card (blocking)
-        new_id = hiro.find_new_card(seen,search_pos=SEARCH_POSITION)
+        new_id = hiro.find_new_card(seen,reposition=True)
         new_loc = hiro.localize_notecard(new_id)
         # when we get a card, parse it to a word vector
         new_word = parser.photo2txt(temp_photo_path)
@@ -125,7 +125,7 @@ try:
                 # if card can't be reached keep teeling user to move it
                 print('Please move card closer')
                 time.sleep(5) # give the user some time to move card
-                new_id = hiro.find_new_card(seen,search_pos=SEARCH_POSITION) # id of new card
+                new_id = hiro.find_new_card(seen,reposition=True) # id of new card
                 new_loc = hiro.localize_notecard(new_id) # new location of new card
             seen.append(new_id)
             word2loc[new_word] = cluster_centers[cluster_id][0]
@@ -183,7 +183,7 @@ try:
                         # if card can't be reached keep teeling user to move it
                         print('Please move card closer')
                         time.sleep(5) # give the user some time to move card
-                        new_id = hiro.find_new_card(seen,search_pos=SEARCH_POSITION) # id of new card
+                        new_id = hiro.find_new_card(seen,reposition=True) # id of new card
                         new_loc = hiro.localize_notecard(new_id) # new location of new card
                     seen.append(new_id)
                     word2loc[word] = cluster_centers[des_cluster][des_cluster_loc]
