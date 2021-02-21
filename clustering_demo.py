@@ -147,7 +147,11 @@ try:
 		new_id = hiro.find_new_card(seen,reposition=True)
 		new_loc = hiro.localize_notecard(new_id)
 		# when we get a card, parse it to a word vector
-		new_word = parser.photo2txt(temp_photo_path)
+		try:
+			new_word = parser.photo2txt(temp_photo_path)
+		except Exception as e:
+			print(f"Couldn't find a word, trying again: {e}")
+			continue
 		try:
 			new_embedding = parser.txt2embedding(new_word)
 		except:
