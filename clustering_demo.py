@@ -125,14 +125,18 @@ def alignclusters(old_clusters,new_clusters):
 	
 	# stores what each of the new clusters should be mapped to (so length of num. clusters)
 	remappings = np.zeros(n_clusters)
-
-	for i in range(n_clusters):
+	yet_to_be_mapped_to = list(range(n_clusters))
+	yet_to_be_mapped_from = list(range(n_clusters))
+	for i in range(n_clusters-1):
 		current_max_index = np.unravel_index(old2newmappings.argmax(), old2newmappings.shape)
 		old,new = current_max_index
 		remappings[new] = old
 		# now zero out the row and column 
 		old2newmappings[old,:] = 0
 		old2newmappings[:,new] = 0
+		yet_to_be_mapped_to.pop(old)
+		yet_to_be_mapped_from.pop(new)
+	remappings[yet_to_be_mapped_from[0]] = yet_to_be_mapped_to[0]
 	if len(set(list(remappings))) != len(list(remappings)): # assert that all mappings are unique
 		import pdb; pdb.set_trace()
 	remapped_clusters = []
