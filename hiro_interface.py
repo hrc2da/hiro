@@ -39,7 +39,7 @@ class HIRO():
     # basic movements
     #--------------------------------------------------------------------------
     
-    def move(self, pos, wrist_mode=0, wrist_angle=0):
+    def move(self, pos, wrist_mode=0, wrist_angle=0, max_tries=3):
         '''
         pos is a numpy array in the form [[x],[y],[z]]
         wristmode determines how wrist position changes at end of move:
@@ -66,13 +66,16 @@ class HIRO():
             # so return True here to avoid unintenionally throwing a movement failure message
             return True
         else:
-            if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
-                self.position = pos #update position
-                return True # move successful
+            num_tries = 0
+            while(num_tries < max_tries):
+                if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
+                    self.position = pos #update position
+                    return True # move successful
+                else:
+                    num_tries +=1
             else:
                 # warnng for if move doesn't happen
                 print('Requested move not possible!')
-                import pdb; pdb.set_trace()
                 self.beep(0)
                 return False # move unsuccessful
             
