@@ -24,7 +24,7 @@ c2_centers = [(160, 0),    (160, 60),   (240, 60),   (240, 0),    (320, 0),    (
 c3_centers = [(-210, 170), (-290, 170), (-260, 230), (-180, 230), (-190, 290), (-110, 290)]
 c4_centers = [(210, 170),  (290, 170),  (260, 230),  (180, 230),  (190, 290),  (110, 290)]
 cluster_capacity = len(c0_centers)
-cluster_centers = [c0_centers, c1_centers, c2_centers, c3_centers, c4_centers]
+cluster_centers = [c0_centers, c1_centers, c2_centers] #, c3_centers, c4_centers]
 k = len(cluster_centers)
 seen = [] #ids of notecards already seen
 allwords = dict() # word -> embedding
@@ -133,7 +133,8 @@ def alignclusters(old_clusters,new_clusters):
 		# now zero out the row and column 
 		old2newmappings[old,:] = 0
 		old2newmappings[:,new] = 0
-	assert len(set(list(remappings))) == len(list(remappings)) # assert that all mappings are unique
+	if len(set(list(remappings))) != len(list(remappings)): # assert that all mappings are unique
+		import pdb; pdb.set_trace()
 	remapped_clusters = []
 	for cid in new_clusters:
 		remapped_clusters.append(remappings[cid])
