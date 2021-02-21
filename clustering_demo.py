@@ -21,8 +21,8 @@ temp_photo_path = '/home/pi/hiro/views/view.jpg'
 c0_centers = [(-80, 130),  (-80, 190),  (0, 190),    (0, 130),    (80, 130),   (80, 190)]
 c1_centers = [(-160, 0),   (-160, 60),  (-240, 60),  (-240, 0),   (-320, 0),   (-320, 60)] 
 c2_centers = [(160, 0),    (160, 60),   (240, 60),   (240, 0),    (320, 0),    (320, 60)]
-c3_centers = [(-260, 230), (-290, 170), (-210, 170), (-180, 230), (-190, 290), (-110, 290)]
-c4_centers = [(260, 230), (290, 170), (210, 170), (180, 230), (190, 290), (110, 290)]
+c3_centers = [(-210, 170), (-290, 170), (-260, 230), (-180, 230), (-190, 290), (-110, 290)]
+c4_centers = [(210, 170),  (290, 170),  (260, 230),  (180, 230),  (190, 290),  (110, 290)]
 cluster_capacity = len(c0_centers)
 cluster_centers = [c0_centers, c1_centers, c2_centers, c3_centers, c4_centers]
 k = len(cluster_centers)
@@ -115,7 +115,7 @@ def alignclusters(old_clusters,new_clusters):
 	# zero out the others in the same slots
 	# repeat
 
-	n_clusters = np.max(old_clusters)
+	n_clusters = np.max(old_clusters) + 1
 	old_new_clusters = new_clusters[:-1] # get the new clusters for all but the new word
 	
 	old2newmappings = np.zeros((n_clusters,n_clusters))
