@@ -97,7 +97,8 @@ def get_neighboring_cluster_loc(potential_centers, filled_centers):
 	return potential_centers[0]
 
 def alignclusters(old_clusters,new_clusters):
-
+	old_clusters = list(map(int,old_clusters))
+	new_clusters = list(map(int,new_clusters))
 	# old_clusters is a list of cluster_ids per word
 	# new_clusters is a list of new cluster_ids per word, with the new word added
 	# build a frequency table of mappings from old to new
