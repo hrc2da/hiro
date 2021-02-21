@@ -39,7 +39,7 @@ class HIRO():
     # basic movements
     #--------------------------------------------------------------------------
     
-    def move(self, pos, wrist_mode=0, wrist_angle=0, max_tries=3):
+    def move(self, pos, wrist_mode=0, wrist_angle=0, max_tries=5):
         '''
         pos is a numpy array in the form [[x],[y],[z]]
         wristmode determines how wrist position changes at end of move:
@@ -167,7 +167,7 @@ class HIRO():
     def find_new_card(self, seen, reposition = False,
                         search_pos = np.array([[0],[280],[200]]),
                         reading_pos = np.array([[0],[290],[90]]),
-                        reading_loc = (0,330)):
+                        reading_loc = (0,320)):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
         with the camera until one is found and that ID is retunred
