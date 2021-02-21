@@ -214,7 +214,9 @@ try:
 					new_loc = hiro.localize_notecard(new_id) # new location of new card
 				seen.append(new_id)
 				word2loc[word] = des_loc
-				# new_clusters[des_cluster][des_cluster_loc] = word     
+				# new_clusters[des_cluster][des_cluster_loc] = word
+
+			cluster_indices = remapped_cluster_indices     
 
 
 
