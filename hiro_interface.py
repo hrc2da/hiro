@@ -227,6 +227,7 @@ class HIRO():
             # 1) the pick failed, in this case go back to search_pos and look for it
             # 2) the place was outside of some tolerance, in this case repick the card from view and replace it
             # for now we are not checking if the place happened and is in the right location.
+            return new_id
         
     #--------------------------------------------------------------------------
     # beep
