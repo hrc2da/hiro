@@ -134,8 +134,8 @@ def alignclusters(old_clusters,new_clusters):
 		# now zero out the row and column 
 		old2newmappings[old,:] = 0
 		old2newmappings[:,new] = 0
-		yet_to_be_mapped_to.pop(old)
-		yet_to_be_mapped_from.pop(new)
+		yet_to_be_mapped_to.remove(old)
+		yet_to_be_mapped_from.remove(new)
 	remappings[yet_to_be_mapped_from[0]] = yet_to_be_mapped_to[0]
 	if len(set(list(remappings))) != len(list(remappings)): # assert that all mappings are unique
 		import pdb; pdb.set_trace()
