@@ -71,7 +71,7 @@ def get_neighboring_cluster_loc(potential_centers, filled_centers):
 	found_filled_spot = False
 	for i,center in enumerate(potential_centers):
 		try:
-			occupied = filled_centers.index(center)
+			_ = filled_centers.index(center)
 			#if no exception, it's filled
 			if i==0:
 				# break to search right until you get an open spot
@@ -80,7 +80,7 @@ def get_neighboring_cluster_loc(potential_centers, filled_centers):
 				# this is not the first spot filled and it's all full to the left
 				# keep searching or throw an error if we're at the end (all full)
 				if i >= len(potential_centers)-1:
-					raise(ValueError("Cluster is overfilled!"))
+					raise(IndexError("Cluster is overfilled!"))
 				else:
 					continue
 			else:
@@ -93,8 +93,71 @@ def get_neighboring_cluster_loc(potential_centers, filled_centers):
 				return center
 			else:
 				continue
+		except IndexError:
+			# the cluster is full
+			# enumerate all the centerpoints
+			# sort in order of distance 
+			# iterate until you find an empty one
+			# actually maybe raise here and handle it outside the function
+			return None
 	assert found_filled_spot == False
 	return potential_centers[0]
+
+def get_isolated_cluster_loc(potential_centers, filled_centers):
+	# the goal is to find an open spot in the potential centers that is as isolated as possible
+	# do one pass through the potential_clusters, and track the indices of the longest "gap"
+	# if the gap is on an end, return the location on the end
+	# otherwise, return a location in the middle of the gap if possible
+	# if the centers are all filled (no gap), return empty		
+	gap_start_index = -1
+	longest_gap_start_index = -1
+	longest_gap_length = 0
+	occupied = [None for i in range(len(potential_centers))]
+	for i,c in enumerate(potential_centers):
+		try:
+			_ = filled_centers.index(c)
+			# if filled, set occupied to true
+			occupied[i] = True
+			if i > 0 and occupied[-1] == False:
+				# end the gap, updated maxes
+				if i - gap_start_index > longest_gap_length:
+					longest_gap_length = i-gap_start_index
+					longest_gap_start_index = gap_start_index
+			elif i > 0 and occupied[-1] == True:
+				# there's no gap, do nothing
+				continue
+		except ValueError:
+			# empty
+			# if not in a gap, then start one
+			if i == 0:
+				gap_start_index = 0
+				occupied[0] = False
+			elif occupied[-1] == False:
+				# we are in a gap, continue it, unless this is the last index
+				if i == (len(potential_centers)-1):
+					if i - gap_start_index > longest_gap_length:
+						longest_gap_length = i-gap_start_index
+						longest_gap_start_index = gap_start_index
+					elif i-gap_start_index == longest_gap_length and longest_gap_start_index != 0:
+						# favor the end points--not sure if this is right or not
+						longest_gap_length = i-gap_start_index
+						longest_gap_start_index = gap_start_index
+				else:
+					continue
+			elif occupied[-1] == True:
+				gap_start_index = i
+	
+	if longest_gap_length == 0:
+		#centers is completely filled
+		return None
+	elif longest_gap_start_index == 0:
+		return potential_centers[0]
+	elif longest_gap_start_index + longest_gap_length == len(potential_centers)-1:
+		return potential_centers[-1]
+	else:
+		return potential_centers[int(longest_gap_start_index + longest_gap_length/2)]
+
+
 
 def alignclusters(old_clusters,new_clusters):
 	old_clusters = list(map(int,old_clusters))
@@ -210,7 +273,25 @@ try:
 					potential_centers = cluster_centers[int(des_cluster)]
 					filled_centers = list(word2loc.values())
 					des_loc = get_neighboring_cluster_loc(potential_centers,filled_centers)
+					if des_loc == None:
+						if des_cluster == 0:
+							# only check 1
+							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
+						elif des_cluster == len(cluster_centers)-1
+							# only check -1
+							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
+						else:
+							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
+							if des_loc == None:
+								des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
 					
+					# still nothing, then choose something random
+					if des_loc == None:
+						all_centers = [c for sublist in cluster_centers for c in sublist if c not in filled_centers]
+						des_loc = np.random.choice(all_centers)
+					
+
+
 				while not hiro.pick_place(new_loc, des_loc):
 					# if card can't be reached keep teeling user to move it
 					print('Please move card closer')
