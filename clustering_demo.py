@@ -273,17 +273,17 @@ try:
 					potential_centers = cluster_centers[int(des_cluster)]
 					filled_centers = list(word2loc.values())
 					des_loc = get_neighboring_cluster_loc(potential_centers,filled_centers)
-					if des_loc == None:
-						if des_cluster == 0:
-							# only check 1
-							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
-						elif des_cluster == len(cluster_centers)-1
-							# only check -1
-							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
-						else:
-							des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
-							if des_loc == None:
-								des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
+					# if des_loc == None:
+					# 	if des_cluster == 0:
+					# 		# only check 1
+					# 		des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
+					# 	elif des_cluster == len(cluster_centers)-1:
+					# 		# only check -1
+					# 		des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
+					# 	else:
+					# 		des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster + 1)], filled_centers)
+					# 		if des_loc == None:
+					# 			des_loc = get_isolated_cluster_loc(cluster_centers[int(des_cluster - 1)], filled_centers)
 					
 					# still nothing, then choose something random
 					if des_loc == None:
