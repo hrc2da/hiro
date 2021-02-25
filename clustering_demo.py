@@ -19,9 +19,9 @@ temp_photo_path = '/home/pi/hiro/views/view.jpg'
 # test fake clustering
 
 # centerpoints for clusters
-c0_centers = [(-80, 130),  (-80, 190),  (0, 190),    (0, 130),    (80, 130),   (80, 190)]
-c1_centers = [(-160, 0),   (-160, 60),  (-240, 60),  (-240, 0),   (-320, 0),   (-320, 60)] 
-c2_centers = [(160, 0),    (160, 60),   (240, 60),   (240, 0),    (320, 0),    (320, 60)]
+c0_centers = [(-80, 130),  (-80, 190)]#,  (0, 190),    (0, 130),    (80, 130),   (80, 190)]
+c1_centers = [(-160, 0),   (-160, 60)]#,  (-240, 60),  (-240, 0),   (-320, 0),   (-320, 60)] 
+c2_centers = [(160, 0),    (160, 60)]#,   (240, 60),   (240, 0),    (320, 0),    (320, 60)]
 c3_centers = [(-210, 170), (-290, 170), (-260, 230), (-180, 230), (-190, 290), (-110, 290)]
 c4_centers = [(210, 170),  (290, 170),  (260, 230),  (180, 230),  (190, 290),  (110, 290)]
 cluster_capacity = len(c0_centers)
@@ -289,7 +289,7 @@ try:
 					# still nothing, then choose something random
 					if des_loc == None:
 						all_centers = [c for sublist in cluster_centers for c in sublist if c not in filled_centers]
-						des_loc = np.random.choice(all_centers)
+						des_loc = all_centers[np.random.choice(range(len(all_centers)))]
 					
 
 
