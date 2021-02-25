@@ -8,6 +8,7 @@ from hiro_interface import *
 import sys
 from copy import copy
 from nlp_utils import NoteParser
+import string
 
 hiro = HIRO(mute=True)
 parser = NoteParser()
@@ -217,7 +218,7 @@ try:
 		new_loc = hiro.localize_notecard(new_id)
 		# when we get a card, parse it to a word vector
 		try:
-			new_word = parser.photo2txt(temp_photo_path)
+			new_word = parser.photo2txt(temp_photo_path).translate(str.maketrans('', '', string.punctuation))
 		except Exception as e:
 			print(f"Couldn't find a word, trying again: {e}")
 			continue
