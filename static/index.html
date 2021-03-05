@@ -1,0 +1,33 @@
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js" integrity="sha512-0XfwGD1nxplHpehcSVI7lY+m/5L37PNHDt+DOc7aLFckwPXjnjeA1oeNbru7YeI4VLs9i+ADnnHEhP69C9CqTA==" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h1>HIRO's Idea Board</h1>
+    <div id='workspace'></div>
+    <div id='clusters'>
+      <h4>Cluster 1</h4>
+      <div id='cluster1'></div>
+      <h4>Cluster 2</h4>
+      <div id='cluster2'></div>
+      <h4>Cluster 3</h4>
+      <div id='cluster3'></div>
+    </div>
+    <h3>Add a Word to the Board</h3>
+    <form action="txt2embedding" method=post>
+        <input type=text name=word>
+        <input id="add_text" type=submit value="Add Word">        
+    </form>
+
+
+    <h3>Upload a Photo to Scan</h3>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input id="upload_file" type=submit value=Upload>
+    </form>
+
+    <script src="static/js/scatter.js"></script>
+
+
+
+</body>
