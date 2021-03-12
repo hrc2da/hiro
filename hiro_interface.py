@@ -61,6 +61,11 @@ class HIRO():
             angle = 90-math.atan2(pos[0,0], pos[1,0])*180/math.pi-wrist_angle #calculate desired angle
             self.arm.set_wrist(angle,wait=True)
         # move arm
+        if np.sign(self.position[0,0])!=np.sign(pos[0,0]) and self.position[1,0]<100 and pos[1,0]<100:
+            # if we are moving fom one side to the other side of the robot's base
+            rad = np.sqrt(self.position[0,0]**2+self.position[1,0]**2) #radius of current position
+            self.arm.set_position(0, rad, self.position[2,0], speed=self.speed, wait=True) # go to middle first
+        #print(pos) # for debugging
         if np.linalg.norm(pos-self.position) < no_move_tolerance: # no move required
             # the seet_position() fucntion returns false if the command is already the position
             # so return True here to avoid unintenionally throwing a movement failure message
@@ -124,7 +129,7 @@ class HIRO():
         returns tuple of form (x, y, angle)
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
-        pixel2mm = self.position[2,0]*0.001171
+        pixel2mm = self.position[2,0]*0.001209
         #detect fiducials
         tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
         # pick out location of desired fiducial 
@@ -134,11 +139,11 @@ class HIRO():
                 (ptA, ptB, ptC, ptD) = tag.corners # locations of four corners in camera FoV
                 beta_cam = np.arctan2(ptB[1]-ptA[1], ptB[0]-ptA[0])*180/math.pi #fiducial angle in camera frame
                 break
-        # frame with origin centered in FoV
+        # camera frame with origin centered in FoV
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
         # wrist frame
-        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+37], [1]]) # use array now so next step is easier
+        p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+45.7], [1]]) # use array now so next step is easier
         # workspace frame
         phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
@@ -169,7 +174,7 @@ class HIRO():
     
     def find_new_card(self, seen, reposition = False,
                         search_pos = np.array([[0],[280],[200]]),
-                        reading_pos = np.array([[0],[290],[90]]),
+                        reading_pos = np.array([[0],[280],[90]]),
                         reading_loc = (0,330)):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
@@ -198,9 +203,6 @@ class HIRO():
             2. pick up the card and move it to the reading location
             3. return to the reading position (close to the table)
             4. process and return
-
-
-
         '''
         if reposition == False:
             search_pos = reading_pos
@@ -228,6 +230,7 @@ class HIRO():
             self.move(reading_pos)
             # recapture the image for reading the word.
             self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            self.capture('/home/pi/hiro/views/read_imgs/%d.jpg' % new_id) # save picture to memory
             # TODO: handle two failure modes possible here:
             # 1) the pick failed, in this case go back to search_pos and look for it
             # 2) the place was outside of some tolerance, in this case repick the card from view and replace it

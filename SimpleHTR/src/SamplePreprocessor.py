@@ -27,8 +27,9 @@ def cropRectangle(img):
     kernel = np.ones((4,4),np.uint8)
     dilation = cv2.dilate(erosion,kernel,iterations = 2)
     
-    _,threshed = cv2.threshold(dilation, 170, 255, cv2.THRESH_BINARY)
+    _,threshed = cv2.threshold(dilation, 150, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(threshed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #import pdb; pdb.set_trace()
     
     rects = [cv2.boundingRect(cnt) for cnt in contours]
     filtered_rects = [rect for rect in rects if (rect[2] > 500 and rect[2] < 750 and rect[3] > 200 and rect[3] < 400 and rect[2]/rect[3] > 2)]
