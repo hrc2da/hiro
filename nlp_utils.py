@@ -14,7 +14,8 @@ from SimpleHTR.src.SamplePreprocessor import preprocess
 
 class NoteParser:
     # note parser loads up and owns all the models
-    w2v_model_path = "models/glove-twitter-25.model"
+    # w2v_model_path = "models/glove-twitter-25.model"
+    w2v_model_path = "data_playground/arxiv/arxiv_sentences_stemmed_bigrams.model"
     pca_model_path = "models/norm_pca_params.pkl"
     htr_char_list_path = "SimpleHTR/model/charList.txt"
     htr = None
@@ -39,15 +40,24 @@ class NoteParser:
             self.pca = pickle.load(infile)
     
     def photo2txt(self, photo):
-        img = preprocess(cv2.imread(photo, cv2.IMREAD_GRAYSCALE), Model.imgSize)
-        batch = Batch(None, [img])
-        (recognized, probability) = self.htr.inferBatch(batch, True)
-        print(f'Recognized: "{recognized[0]}"')
-        print(f'Probability: {probability[0]}')
-        return recognized[0].lower()
+        imgs = preprocess(cv2.imread(photo, cv2.IMREAD_GRAYSCALE), Model.imgSize)
+        
+        batch = Batch(None, imgs)
+        (recognized, probabilities) = self.htr.inferBatch(batch, True)
+        max_prob = 0
+        best_word = ''
+        for i,p in enumerate(probabilities):
+            print(f'Recognized: "{recognized[i]}"')
+            print(f'Probability: {p}')
+        if p > max_prob:
+            max_prob = p
+            best_word = recognized[i]
+        
+        return best_word.lower()
     
     def txt2embedding(self,word):
-        return self.w2v.word_vec(word, use_norm=True)
+        import pdb; pdb.set_trace()
+        return self.w2v.wv.word_vec(word, use_norm=True)
     
     def txt2pca(self,word):
         return self.embedding2pca(self.txt2embedding(word))
