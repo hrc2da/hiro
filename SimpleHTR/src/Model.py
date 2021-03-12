@@ -54,9 +54,9 @@ class Model:
         cnnIn4d = tf.expand_dims(input=self.inputImgs, axis=3)
 
         # list of parameters for the layers
-        kernelVals = [5, 5, 3, 3, 3]
-        featureVals = [1, 32, 64, 128, 128, 256]
-        strideVals = poolVals = [(2, 2), (2, 2), (1, 2), (1, 2), (1, 2)]
+        kernelVals = [5, 5, 5, 3, 3, 3, 3]
+        featureVals = [1, 32, 64, 64, 128, 128, 128, 256]
+        strideVals = poolVals = [(2, 2), (2, 2), (1,1), (1, 2), (1,1), (1, 2), (1, 2)]
         numLayers = len(strideVals)
 
         # create layers
@@ -292,4 +292,4 @@ class Model:
     def save(self):
         "save model to file"
         self.snapID += 1
-        self.saver.save(self.sess, '../model/snapshot', global_step=self.snapID)
+        self.saver.save(self.sess, 'SimpleHTR/model/snapshot', global_step=self.snapID)

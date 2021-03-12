@@ -4,7 +4,15 @@ Flask-Cors==3.0.9
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
-numpy==1.19.4
 opencv-python==4.4.0.46
 six==1.15.0
 Werkzeug==1.0.1
+gensim
+scikit-learn
+editdistance==0.5.2
+lmdb==1.0.0
+matplotlib==3.2.1
+numpy==1.19.5
+opencv-python==4.4.0.46
+path==15.0.0
+tensorflow==2.4.0

@@ -78,8 +78,9 @@ def preprocess(img, imgSize, dataAugmentation=False):
     else:
         # center image
         # img = img[190:340,360:800]
+        padding = 20
         img = cropRectangle(img)
-        # img = img[padding:-padding,padding:-padding]
+        img = img[padding:-padding,padding:-padding]
         img = img.astype(np.float)
         wt, ht = imgSize
         h, w = img.shape
