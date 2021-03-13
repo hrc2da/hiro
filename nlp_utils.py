@@ -14,8 +14,8 @@ from SimpleHTR.src.SamplePreprocessor import preprocess
 
 class NoteParser:
     # note parser loads up and owns all the models
-    # w2v_model_path = "models/glove-twitter-25.model"
-    w2v_model_path = "data_playground/arxiv/arxiv_sentences_stemmed_bigrams.model"
+    w2v_model_path = "models/glove-twitter-25.model"
+    # w2v_model_path = "data_playground/arxiv/arxiv_sentences_stemmed_bigrams.model"
     pca_model_path = "models/norm_pca_params.pkl"
     htr_char_list_path = "SimpleHTR/model/charList.txt"
     htr = None
@@ -56,8 +56,9 @@ class NoteParser:
         return best_word.lower()
     
     def txt2embedding(self,word):
-        import pdb; pdb.set_trace()
-        return self.w2v.wv.word_vec(word, use_norm=True)
+        return self.w2v.word_vec(word, use_norm=True)
+        # import pdb; pdb.set_trace()
+        # return self.w2v.wv.word_vec(word, use_norm=True)
     
     def txt2pca(self,word):
         return self.embedding2pca(self.txt2embedding(word))
