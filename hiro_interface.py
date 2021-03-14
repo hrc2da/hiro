@@ -1,7 +1,6 @@
 # provides a class to hold high-level funcitons for HIRO system
 
 #imports
-from picamera import PiCamera
 import pyuarm
 import numpy as np
 import cv2
@@ -28,13 +27,23 @@ class HIRO():
         self.projector = projector # controls if projections are made or not
         self.project() # start with blank projection
         # camera
-        self.camera = PiCamera(resolution=(1024,768)) #camera
+        self.setup_camera()
         self.view = None #most recent camera image captured
         
     def disconnect(self):
         self.arm.disconnect() #disconnect uArm
         cv2.destroyAllWindows() # close projection
     
+    def setup_camera(self, width=1024, height=768):
+        # to use v4l2, must run sudo modprobe bcm2835-v4l2 to setup camera
+        self.camera = cv2.VideoCapture(0)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self.camera.set(cv2.CAP_PROP_BUFFERSIZE, 1) # don't capture multiple frames
+
+    def close_camera(self):
+        self.camera.release()
+
     #--------------------------------------------------------------------------
     # basic movements
     #--------------------------------------------------------------------------
@@ -120,8 +129,10 @@ class HIRO():
         takes a picture with the camera, saves it to imagepath,
         and updates view
         '''
-        self.camera.capture(imagepath)
-        self.view = cv2.rotate(cv2.imread(imagepath, cv2.IMREAD_GRAYSCALE), cv2.ROTATE_180)
+        success, frame = self.camera.read() # read the next frame (buffer length is 1)
+        self.view = cv2.cvtColor(cv2.rotate(frame, cv2.ROTATE_180), cv2.COLOR_BGR2GRAY) # store the frame for apriltags
+        cv2.imwrite(imagepath, frame) # write image to file for parser
+        
     
     def localize_fiducial(self, fid_num):
         '''
