@@ -60,7 +60,6 @@ def binary_classification_metrics(gt_aabbs, pred_aabbs):
 
 def infer_one(net, img, thres=0.5, max_aabbs=None):
     with torch.no_grad():
-        import pdb; pdb.set_trace()
         y = net(img, apply_softmax=True)
         pred_map = y.to('cpu').numpy()[0]
         scale_up = 1 / compute_scale_down(net.input_size, net.output_size)
