@@ -298,13 +298,17 @@ class HIRO():
             y_pos = int((image_height - text_height) / 2)
             canvas.text((x_pos, y_pos), string, font=font, fill='#FFFFFF')
             img = img.rotate(180) #make it right-side-up
-            img.save('/home/pi/hiro/projections/new_proj.jpg')
+            prjimgpth = '/home/pi/hiro/projections/new_proj.jpg'
+            img.save(prjimgpth)
             # full-screen projection
-            proj = cv2.imread('/home/pi/hiro/projections/new_proj.jpg')
-            cv2.startWindowThread()
-            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-            cv2.imshow("window", proj)
+            if self.projection_process is not None:
+                self.projection_process.kill()
+            self.projection_process = subprocess.Popen(['feh', prjimgpth, '--fullscreen'])
+            # proj = cv2.imread('/home/pi/hiro/projections/new_proj.jpg')
+            # cv2.startWindowThread()
+            # cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+            # cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+            # cv2.imshow("window", proj)
             #cv2.waitKey()
             
             
