@@ -25,6 +25,7 @@ class HIRO():
         self.mute = mute # controls if sounds are made of not
         #Projector
         self.projector = projector # controls if projections are made or not
+        self.projection_process = None
         self.project() # start with blank projection
         # camera
         self.setup_camera()
