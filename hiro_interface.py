@@ -248,6 +248,36 @@ class HIRO():
             # 2) the place was outside of some tolerance, in this case repick the card from view and replace it
             # for now we are not checking if the place happened and is in the right location.
             return new_id
+    
+    '''
+    def sweep(self, sweep_points = [], sweep_height=200):
+        # performs sweep over workspace and returns dictionay containing updated locations of cards
+        # dictionary entries in form fiducial_ID : (x,y,theta)
+        # sweep_points: list of (x,y) tuples for positions to go to in sweep
+        # sweep_height: heihgt sweep pictures are taken at
+        self.project('starting sweep')
+        time.sleep(1)
+        self.project() # clear projection
+        updated_locs = {} # dictionary to be returned
+        for sweep_point in sweep_points:
+            search_loc = np.array([[sweep_point(0)],[sweep_point(1)],[sweep_height]]) # location to take next picture
+            self.move(search_loc) # move to locaiton to take picture
+            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None) # detected tags
+            for tag in tags: # for each tag detected
+                id = tag.tag_id
+                card_loc = localize_notecard(id)
+                if id in updated_locs.keys(): # if card had already been added to dictionary
+                    #average detected locations
+                    updated_locs[id] = (np.average([updated_locs[id][0], card_loc[0]]), np.average([updated_locs[id][1], card_loc[1]]), np.average([updated_locs[id][0], card_loc[0]]))
+                else:
+                    # add new card and locaiton to dictionary
+                    updated_locs[id] = card_loc
+        self.project('sweep complete')
+        time.sleep(1)
+        self.project() # clear projection
+        return updated_locs
+    '''
         
     #--------------------------------------------------------------------------
     # beep
