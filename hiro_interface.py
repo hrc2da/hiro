@@ -157,7 +157,7 @@ class HIRO():
         # wrist frame
         p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+45.7], [1]]) # use array now so next step is easier
         # workspace frame
-        phi = np.arctan2(self.position[0,0], self.position[1,0]) #robot angle
+        phi = -np.arctan2(self.position[0,0], self.position[1,0]) #robot angle (need to verify sign)
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
                       [np.sin(phi),  np.cos(phi), self.position[1,0]],
                       [          0,            0,                 1]])
