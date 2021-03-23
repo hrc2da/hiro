@@ -16,15 +16,18 @@ at_detector = Detector(families='tag36h11',nthreads=1,quad_decimate=1.0,quad_sig
 class HIRO():
     def __init__(self, mute=False, projector=True):
         #uArm
-        self.arm = pyuarm.UArm()
+        self.arm = pyuarm.UArm(debug=False)
         self.arm.connect()
-        self.speed = 100 # speed limit
-        self.ground = 62 # z value to touch suction cup to ground 
+        self.speed = 200 # speed limit
+        self.ground = 62 + 18 # z value to touch suction cup to ground 
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
         #Projector
         self.projector = projector # controls if projections are made or not
+        cv2.startWindowThread()
+        cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
         self.projection_process = None
         self.project() # start with blank projection
         # camera
@@ -44,6 +47,11 @@ class HIRO():
 
     def close_camera(self):
         self.camera.release()
+
+    def shutdown(self):
+        self.close_camera()
+        self.arm.set_position(0, 150, 150, speed=self.speed, wait=True)
+        self.arm.disconnect()
 
     #--------------------------------------------------------------------------
     # basic movements
@@ -84,7 +92,7 @@ class HIRO():
         else:
             num_tries = 0
             while(num_tries < max_tries):
-                if self.arm.set_position(pos[0,0], pos[1,0], pos[2,0], speed=self.speed, wait=True):
+                if self.arm.set_position(int(pos[0,0]), int(pos[1,0]), int(pos[2,0]), speed=self.speed, wait=True):
                     self.position = pos #update position
                     return True # move successful
                 else:
@@ -105,19 +113,35 @@ class HIRO():
         angle is measured CCW from workspace x axis
         returns true iff all moves were successful
         '''
-        if not self.move(np.array([[start[0]],[start[1]],[self.ground+40]]), wrist_mode=3, wrist_angle=start[2]): # hover over start
+        if self.position[2,0] < 100:
+            print(f"Raising z before move")
+            position = self.position[:]
+            position[2,0] = 150
+            
+            if not self.move(position):
+                return False
+
+        print(f"Moving to start:{[[start[0]],[start[1]],[self.ground+60]]}")
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground+60]]), wrist_mode=3, wrist_angle=start[2]): # hover over start
             return False
+        print(f"Dropping to ground: {[[start[0]],[start[1]],[self.ground]]}")
         if not self.move(np.array([[start[0]],[start[1]],[self.ground]]), wrist_mode=0): #drop to start
             return False
+        print("activating pump")
         self.arm.set_pump(True) #grab card
-        if not self.move(np.array([[start[0]],[start[1]],[self.ground+50]]), wrist_mode=0): # lift card up so it doesn't mess up other cards
+        print(f"Lifting card:{[[start[0]],[start[1]],[self.ground+60]]}")
+        if not self.move(np.array([[start[0]],[start[1]],[self.ground+60]]), wrist_mode=0): # lift card up so it doesn't mess up other cards
             return False
-        if not self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=2): # hover over end
+        print(f"Moving to end:{[[end[0]],[end[1]],[self.ground+60]]}")
+        if not self.move(np.array([[end[0]],[end[1]],[self.ground+60]]), wrist_mode=2): # hover over end
             return False
+        print(f"Dropping to ground: {[[end[0]],[end[1]],[self.ground+10]]}")
         if not self.move(np.array([[end[0]],[end[1]],[self.ground+10]]), wrist_mode=0): # lower over end
             return False
+        print("Deactivating pump")
         self.arm.set_pump(False) #drop card
-        if not self.move(np.array([[end[0]],[end[1]],[self.ground+50]]), wrist_mode=0): # lift up to get out of the way
+        print(f"Retracting: {[[end[0]],[end[1]],[self.ground+40]]}")
+        if not self.move(np.array([[end[0]],[end[1]],[self.ground+60]]), wrist_mode=0): # lift up to get out of the way
             return False
         return True # pick-place movements successful
     
@@ -125,15 +149,18 @@ class HIRO():
     # fiducial localization / transformations
     #--------------------------------------------------------------------------
     
-    def capture(self, imagepath):
+    def capture(self, imagepath=None):
         '''
-        takes a picture with the camera, saves it to imagepath,
+        takes a picture with the camera, optionally saves it to imagepath,
         and updates view
         '''
+        # self.camera.release()
+        # self.camera = cv2.VideoCapture(0)
         success, frame = self.camera.read() # read the next frame (buffer length is 1)
         self.view = cv2.cvtColor(cv2.rotate(frame, cv2.ROTATE_180), cv2.COLOR_BGR2GRAY) # store the frame for apriltags
-        cv2.imwrite(imagepath, frame) # write image to file for parser
-        
+        if imagepath is not None:
+            cv2.imwrite(imagepath, frame) # write image to file for parser
+        return frame
     
     def localize_fiducial(self, fid_num):
         '''
@@ -186,7 +213,7 @@ class HIRO():
     
     def find_new_card(self, seen, reposition = False,
                         search_pos = np.array([[0],[280],[200]]),
-                        reading_pos = np.array([[0],[280],[90]]),
+                        reading_pos = np.array([[0],[280],[120]]),
                         reading_loc = (0,330)):
         '''
         takes in list of seen fiducial IDs and keeps looking for a new one
@@ -225,7 +252,8 @@ class HIRO():
         self.project('place card above')
         self.beep(1) # alert the user of readyness
         while not newfound:
-            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            time.sleep(1)
+            self.capture(None) # take a picture but don't write to disk
             tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
             for tag in tags: # for each tag detected
                 if tag.tag_id not in seen:
@@ -240,9 +268,11 @@ class HIRO():
             cur_loc = self.localize_notecard(new_id)
             self.pick_place(cur_loc, reading_loc)
             self.move(reading_pos)
+            time.sleep(0.5)
             # recapture the image for reading the word.
-            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
-            self.capture('/home/pi/hiro/views/read_imgs/%d.jpg' % new_id) # save picture to memory
+            self.camera.grab()
+            cap = self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            cv2.imwrite('/home/pi/hiro/views/read_imgs/%d.jpg' % new_id, cap) # save picture to memory
             # TODO: handle two failure modes possible here:
             # 1) the pick failed, in this case go back to search_pos and look for it
             # 2) the place was outside of some tolerance, in this case repick the card from view and replace it
@@ -302,14 +332,12 @@ class HIRO():
             prjimgpth = '/home/pi/hiro/projections/new_proj.jpg'
             img.save(prjimgpth)
             # full-screen projection
-            if self.projection_process is not None:
-                self.projection_process.kill()
-            self.projection_process = subprocess.Popen(['feh', prjimgpth, '--fullscreen'])
-            # proj = cv2.imread('/home/pi/hiro/projections/new_proj.jpg')
-            # cv2.startWindowThread()
-            # cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-            # cv2.setWindowProperty("window",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-            # cv2.imshow("window", proj)
-            #cv2.waitKey()
+            # if self.projection_process is not None:
+            #     self.projection_process.kill()
+            # self.projection_process = subprocess.Popen(['feh', prjimgpth, '--fullscreen'])
+            proj = cv2.imread('/home/pi/hiro/projections/new_proj.jpg')
+            
+            cv2.imshow("window", proj)
+            cv2.waitKey(50)
             
             
