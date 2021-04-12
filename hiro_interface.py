@@ -170,6 +170,7 @@ class HIRO():
         returns tuple of form (x, y, angle)
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
+        
         pixel2mm = self.position[2,0]*self.pixel_scalar
         #detect fiducials
         tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
@@ -179,7 +180,9 @@ class HIRO():
                 p_cam = tag.center # fiducial position in camera FoV
                 (ptA, ptB, ptC, ptD) = tag.corners # locations of four corners in camera FoV
                 # beta_cam = np.arctan2(ptB[1]-ptA[1], ptB[0]-ptA[0])*180/math.pi #fiducial angle in camera frame
+                
                 beta_cam = np.arctan2(-ptA[1]+ptB[1], ptA[0]-ptB[0])*180/math.pi
+                
                 break
         # express the center of the fiducial with respect 
         # to the center of the camera frame (with the y-axis flipped to point up)
@@ -194,10 +197,12 @@ class HIRO():
                       [np.sin(phi),  np.cos(phi), self.position[1,0]],
                       [          0,            0,                 1]])
         p_work = T@p_wrist
+        
         # convert fiducial angle to world view angle
         # beta_work = 180 + beta_cam - np.arctan2(self.position[0,0], self.position[1,0])*180/math.pi
         beta_work = beta_cam + phi*180/math.pi
-        # import pdb; pdb.set_trace()
+        
+        # 
         if beta_work > 180:
             beta_work = beta_work-360 # angle correction
         return (p_work[0,0], p_work[1,0], beta_work) #[mm]
@@ -213,6 +218,7 @@ class HIRO():
         l = 22.5 # horizontal distance from card cener to fiducial center [mm]
         k = 12.8 # vertical distance from card cener to fiducial center [mm]
         P_f = self.localize_fiducial(fid_num) #locaiton of fiducial center
+        
         beta = P_f[2]*math.pi/180 #convert to radians
         x_nc = P_f[0]-l*np.cos(beta)+k*np.sin(beta)
         y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
@@ -269,11 +275,13 @@ class HIRO():
                     self.project() # blank projection
                     newfound = True
                     break
+        
         if reposition == False:
             return new_id
         else:
             cur_loc = self.localize_notecard(new_id)
             print(f'CURLOC: {cur_loc}')
+            
             self.pick_place(cur_loc, reading_loc)
             self.move(reading_pos)
             time.sleep(0.5)
