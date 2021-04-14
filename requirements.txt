@@ -13,8 +13,6 @@ gensim==3.8.3
 google-auth==1.27.0
 google-auth-oauthlib==0.4.2
 google-pasta==0.2.0
-grpcio==1.32.0
-h5py==2.10.0
 idna==2.10
 importlib-metadata==3.4.0
 joblib==1.0.1
@@ -49,13 +47,11 @@ six==1.15.0
 smart-open==4.2.0
 tensorboard==2.4.1
 tensorboard-plugin-wit==1.8.0
-tensorflow @ https://github.com/lhelontra/tensorflow-on-arm/releases/download/v2.4.0/tensorflow-2.4.0-cp37-none-linux_armv7l.whl
 tensorflow-estimator==2.4.0
 termcolor==1.1.0
 threadpoolctl==2.1.0
 typing-extensions==3.7.4.3
 urllib3==1.26.3
 Werkzeug==1.0.1
--e git+https://github.com/githubharald/CTCWordBeamSearch.git@3fa8132d705c2b6b02f133b270fcd711d0f37eeb#egg=word_beam_search
 wrapt==1.12.1
 zipp==3.4.0

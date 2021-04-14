@@ -14,12 +14,13 @@ import subprocess
 at_detector = Detector(families='tag36h11',nthreads=1,quad_decimate=1.0,quad_sigma=0.0,refine_edges=1,decode_sharpening=0.25,debug=0)
 
 class HIRO():
+    pixel_scalar = 0.001209
     def __init__(self, mute=False, projector=True):
         #uArm
-        self.arm = pyuarm.UArm(debug=False)
+        self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=True)
         self.arm.connect()
         self.speed = 200 # speed limit
-        self.ground = 62 + 18 # z value to touch suction cup to ground 
+        self.ground = 62 + 12 # z value to touch suction cup to ground 
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
@@ -98,7 +99,7 @@ class HIRO():
                 else:
                     print("move failed, trying again!")
                     num_tries +=1
-                time.sleep(0.5)
+                # time.sleep(0.5)
             else:
                 # warnng for if move doesn't happen
                 print(f'Requested move to {pos} from {self.position} not possible!')
@@ -129,6 +130,7 @@ class HIRO():
             return False
         print("activating pump")
         self.arm.set_pump(True) #grab card
+        time.sleep(0.5)
         print(f"Lifting card:{[[start[0]],[start[1]],[self.ground+60]]}")
         if not self.move(np.array([[start[0]],[start[1]],[self.ground+60]]), wrist_mode=0): # lift card up so it doesn't mess up other cards
             return False
@@ -168,7 +170,8 @@ class HIRO():
         returns tuple of form (x, y, angle)
         '''
         # conversion factor current height (assume height hasn't changed since last capture)
-        pixel2mm = self.position[2,0]*0.001209
+        
+        pixel2mm = self.position[2,0]*self.pixel_scalar
         #detect fiducials
         tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None)
         # pick out location of desired fiducial 
@@ -176,24 +179,33 @@ class HIRO():
             if tag.tag_id == fid_num: # if its the tag we are lookig for
                 p_cam = tag.center # fiducial position in camera FoV
                 (ptA, ptB, ptC, ptD) = tag.corners # locations of four corners in camera FoV
-                beta_cam = np.arctan2(ptB[1]-ptA[1], ptB[0]-ptA[0])*180/math.pi #fiducial angle in camera frame
+                # beta_cam = np.arctan2(ptB[1]-ptA[1], ptB[0]-ptA[0])*180/math.pi #fiducial angle in camera frame
+                
+                beta_cam = np.arctan2(-ptA[1]+ptB[1], ptA[0]-ptB[0])*180/math.pi
+                
                 break
-        # camera frame with origin centered in FoV
+        # express the center of the fiducial with respect 
+        # to the center of the camera frame (with the y-axis flipped to point up)
         p_camcenter_pix = (p_cam[0]-512, 384-p_cam[1]) #pixels
+        # now convert that to mm from the center of the photograph
         p_camcenter = (p_camcenter_pix[0]*pixel2mm, p_camcenter_pix[1]*pixel2mm) #convert to mm
-        # wrist frame
+        # add an offset to get a representation wrt the wrist frame
         p_wrist = np.array([[p_camcenter[0]], [p_camcenter[1]+45.7], [1]]) # use array now so next step is easier
-        # workspace frame
+        # now rotate and translate  workspace frame
         phi = -np.arctan2(self.position[0,0], self.position[1,0]) #robot angle (need to verify sign)
         T = np.array([[np.cos(phi), -np.sin(phi), self.position[0,0]],
                       [np.sin(phi),  np.cos(phi), self.position[1,0]],
                       [          0,            0,                 1]])
         p_work = T@p_wrist
+        
         # convert fiducial angle to world view angle
-        beta_work = 180 + beta_cam - np.arctan2(self.position[0,0], self.position[1,0])*180/math.pi
+        # beta_work = 180 + beta_cam - np.arctan2(self.position[0,0], self.position[1,0])*180/math.pi
+        beta_work = beta_cam + phi*180/math.pi
+        
+        # 
         if beta_work > 180:
             beta_work = beta_work-360 # angle correction
-        return (p_work[0,0], p_work[1,0], -beta_work) #[mm]
+        return (p_work[0,0], p_work[1,0], beta_work) #[mm]
     
     def localize_notecard(self, fid_num):
         '''
@@ -206,6 +218,7 @@ class HIRO():
         l = 22.5 # horizontal distance from card cener to fiducial center [mm]
         k = 12.8 # vertical distance from card cener to fiducial center [mm]
         P_f = self.localize_fiducial(fid_num) #locaiton of fiducial center
+        
         beta = P_f[2]*math.pi/180 #convert to radians
         x_nc = P_f[0]-l*np.cos(beta)+k*np.sin(beta)
         y_nc = P_f[1]-l*np.sin(beta)-k*np.cos(beta)
@@ -262,10 +275,13 @@ class HIRO():
                     self.project() # blank projection
                     newfound = True
                     break
+        
         if reposition == False:
             return new_id
         else:
             cur_loc = self.localize_notecard(new_id)
+            print(f'CURLOC: {cur_loc}')
+            
             self.pick_place(cur_loc, reading_loc)
             self.move(reading_pos)
             time.sleep(0.5)
@@ -279,8 +295,8 @@ class HIRO():
             # for now we are not checking if the place happened and is in the right location.
             return new_id
     
-    '''
-    def sweep(self, sweep_points = [(-230, 50), (-150, 30), (-150, 200), (0, 150), (150, 200), (150, 30), (230, 50)], sweep_height=200):
+ 
+    def sweep(self, sweep_points = [(-230, 50), (-150, 30), (-150, 200), (0, 150), (150, 200), (150, 30), (230, 50)], sweep_height=240):
         # performs sweep over workspace and returns dictionay containing updated locations of cards
         # dictionary entries in form fiducial_ID : (x,y,theta)
         # sweep_points: list of (x,y) tuples for positions to go to in sweep
@@ -289,17 +305,20 @@ class HIRO():
         time.sleep(1)
         self.project() # clear projection
         updated_locs = {} # dictionary to be returned
-        for sweep_point in sweep_points:
-            search_loc = np.array([[sweep_point(0)],[sweep_point(1)],[sweep_height]]) # location to take next picture
+        for i,sweep_point in enumerate(sweep_points):
+            search_loc = np.array([[sweep_point[0]],[sweep_point[1]],[sweep_height]]) # location to take next picture
             self.move(search_loc) # move to locaiton to take picture
-            self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            self.camera.grab()
+            time.sleep(0.1)
+            cap = self.capture('/home/pi/hiro/views/view.jpg') # take a picture
+            cv2.imwrite('/home/pi/hiro/views/sweep_imgs/%d.jpg' % i, cap) # save picture to memory
             tags = at_detector.detect(self.view, estimate_tag_pose=False, camera_params=None, tag_size=None) # detected tags
             for tag in tags: # for each tag detected
                 id = tag.tag_id
-                card_loc = localize_notecard(id)
+                card_loc = self.localize_notecard(id)
                 if id in updated_locs.keys(): # if card had already been added to dictionary
                     #average detected locations
-                    updated_locs[id] = (np.average([updated_locs[id][0], card_loc[0]]), np.average([updated_locs[id][1], card_loc[1]]), np.average([updated_locs[id][0], card_loc[0]]))
+                    updated_locs[id] = (np.average([updated_locs[id][0], card_loc[0]]), np.average([updated_locs[id][1], card_loc[1]]), np.average([updated_locs[id][2], card_loc[2]]))
                 else:
                     # add new card and locaiton to dictionary
                     updated_locs[id] = card_loc
@@ -307,7 +326,7 @@ class HIRO():
         time.sleep(1)
         self.project() # clear projection
         return updated_locs
-    '''
+
         
     #--------------------------------------------------------------------------
     # beep

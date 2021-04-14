@@ -30,7 +30,7 @@ def train(model, loader):
     summaryWordAccuracies = []
     bestCharErrorRate = float('inf')  # best valdiation character error rate
     noImprovementSince = 0  # number of epochs no improvement of character error rate occured
-    earlyStopping = 25  # stop training after this number of epochs without improvement
+    earlyStopping = 100  # stop training after this number of epochs without improvement
     while True:
         epoch += 1
         print('Epoch:', epoch)
@@ -58,12 +58,17 @@ def train(model, loader):
             bestCharErrorRate = charErrorRate
             noImprovementSince = 0
             model.save()
+            
         else:
-            print(f'Character error rate not improved, best so far: {charErrorRate * 100.0}%')
+            print(f'Character error rate not improved, best so far: {bestCharErrorRate * 100.0}%')
             noImprovementSince += 1
 
         # stop training if no more improvement in the last x epochs
         if noImprovementSince >= earlyStopping:
+            save = input("would you like to save?")
+            if save == 'y':
+                print("Saving model!")
+                model.save()
             print(f'No more improvement since {earlyStopping} epochs. Training stopped.')
             break
 
@@ -134,12 +139,12 @@ def main():
     if args.train or args.validate:
         # load training data, create TF model
         loader = DataLoaderIAM(args.data_dir, args.batch_size, Model.imgSize, Model.maxTextLen, args.fast)
-
+        loader.charList = sorted(list(" !\"#&'()*+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"))
         # save characters of model for inference mode
         open(FilePaths.fnCharList, 'w').write(str().join(loader.charList))
-
-        # save words contained in dataset into file
-        open(FilePaths.fnCorpus, 'w').write(str(' ').join(loader.trainWords + loader.validationWords))
+        if args.train:
+            # save words contained in dataset into file
+            open(FilePaths.fnCorpus, 'w').write(str(' ').join(loader.trainWords + loader.validationWords))
 
         # execute training or validation
         if args.train:

@@ -2,11 +2,14 @@ import os
 import sys
 
 import numpy as np
-import tensorflow as tf
 
-# Disable eager mode
-tf.compat.v1.disable_eager_execution()
-tf.config.set_visible_devices([], 'GPU')
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import transforms, utils
+from torch.utils.data import Dataset, DataLoader
+
 
 class DecoderType:
     BestPath = 0
@@ -15,11 +18,11 @@ class DecoderType:
 
 
 class Model:
-    "minimalistic TF model for HTR"
+    "minimalistic PyTorch model for HTR from https://towardsdatascience.com/faq-build-a-handwritten-text-recognition-system-using-tensorflow-27648fb18519"
 
     # model constants
-    imgSize = (128, 32)
-    maxTextLen = 32
+    imgSize = (800, 64)
+    maxTextLen = 100
 
     def __init__(self, charList, decoderType=DecoderType.BestPath, mustRestore=False, dump=False):
         "init model: add CNN, RNN and CTC and initialize TF"
@@ -29,11 +32,11 @@ class Model:
         self.mustRestore = mustRestore
         self.snapID = 0
 
-        # Whether to use normalization over a batch or a population
-        self.is_train = tf.compat.v1.placeholder(tf.bool, name='is_train')
+        # # Whether to use normalization over a batch or a population
+        # self.is_train = tf.compat.v1.placeholder(tf.bool, name='is_train')
 
-        # input image batch
-        self.inputImgs = tf.compat.v1.placeholder(tf.float32, shape=(None, Model.imgSize[0], Model.imgSize[1]))
+        # # input image batch
+        # self.inputImgs = tf.compat.v1.placeholder(tf.float32, shape=(None, Model.imgSize[0], Model.imgSize[1]))
 
         # setup CNN, RNN and CTC
         self.setupCNN()
@@ -292,4 +295,4 @@ class Model:
     def save(self):
         "save model to file"
         self.snapID += 1
-        self.saver.save(self.sess, 'SimpleHTR/model/snapshot', global_step=self.snapID)
+        self.saver.save(self.sess, '../model/snapshot', global_step=self.snapID)

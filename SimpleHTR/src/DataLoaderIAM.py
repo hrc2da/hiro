@@ -57,7 +57,7 @@ class DataLoaderIAM:
             # filename: part1-part2-part3 --> part1/part1-part2/part1-part2-part3.png
             fileNameSplit = lineSplit[0].split('-')
             fileName = data_dir / 'img' / fileNameSplit[0] / f'{fileNameSplit[0]}-{fileNameSplit[1]}' / lineSplit[0] + '.png'
-
+            
             if lineSplit[0] in bad_samples_reference:
                 print('Ignoring known broken image:', fileName)
                 continue
@@ -73,6 +73,11 @@ class DataLoaderIAM:
         splitIdx = int(0.95 * len(self.samples))
         self.trainSamples = self.samples[:splitIdx]
         self.validationSamples = self.samples[splitIdx:]
+
+        # flip to try to get the custom samples in the training set
+        # splitIdx = int(0.05 * len(self.samples))
+        # self.validationSamples = self.samples[:splitIdx]
+        # self.trainSamples = self.samples[splitIdx:]
 
         # put words into lists
         self.trainWords = [x.gtText for x in self.trainSamples]
@@ -108,7 +113,7 @@ class DataLoaderIAM:
 
     def validationSet(self):
         "switch to validation set"
-        self.dataAugmentation = False
+        self.dataAugmentation = 'validation' #False
         self.currIdx = 0
         self.samples = self.validationSamples
         self.currSet = 'val'
