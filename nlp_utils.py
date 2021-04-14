@@ -12,6 +12,9 @@ from SimpleHTR.src.DataLoaderIAM import DataLoaderIAM, Batch
 from SimpleHTR.src.Model import Model, DecoderType
 from SimpleHTR.src.SamplePreprocessor import preprocess
 
+from sentence_transformers import SentenceTransformer
+
+
 class NoteParser:
     # note parser loads up and owns all the models
     w2v_model_path = "models/glove-twitter-25.model"
@@ -32,8 +35,10 @@ class NoteParser:
         self.htr = Model(open(self.htr_char_list_path).read(), decoderType=DecoderType.WordBeamSearch, mustRestore=True, dump=False)
         
     def load_w2v_model(self):
-        self.w2v = KeyedVectors.load(self.w2v_model_path)
-        self.w2v.init_sims()
+        # self.w2v = KeyedVectors.load(self.w2v_model_path)
+        # self.w2v.init_sims()
+        self.w2v = SentenceTransformer('paraphrase-distilroberta-base-v1')
+        self.w2v.word_vec = lambda word,use_norm=True: self.w2v.encode([word])[0]
 
     def load_pca_model(self):
         with open(self.pca_model_path, 'rb') as infile:
@@ -49,9 +54,9 @@ class NoteParser:
         for i,p in enumerate(probabilities):
             print(f'Recognized: "{recognized[i]}"')
             print(f'Probability: {p}')
-        if p > max_prob:
-            max_prob = p
-            best_word = recognized[i]
+            if p > max_prob:
+                max_prob = p
+                best_word = recognized[i]
         
         return best_word.lower()
     
@@ -78,8 +83,9 @@ class NoteParser:
     def photo2pca(self,photo):
         return self.embedding2pca(self.txt2embedding(self.photo2txt(photo)))
 
-    def txt2clusters(self, wordset, k=3):
-        vectors = [self.txt2embedding(w) for w in wordset]
+    def txt2clusters(self, wordset, vectors=None, k=3):
+        if vectors is None:
+            vectors = [self.txt2embedding(w) for w in wordset]
         clusters = KMeans(n_clusters=k).fit(vectors).labels_
         clustered_words = [[] for _ in range(k)]
         print(clusters)
