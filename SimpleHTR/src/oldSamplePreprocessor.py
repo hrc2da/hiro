@@ -9,8 +9,6 @@ sys.path.append(path)
 from wordnet.net import WordDetectorNet
 from wordnet.eval import infer_one
 import torch
-import numpy as np
-import time
 
 #probably shouldn't have this here...
 net = WordDetectorNet()
@@ -29,17 +27,15 @@ def cropRectangle(img):
     kernel = np.ones((4,4),np.uint8)
     dilation = cv2.dilate(erosion,kernel,iterations = 2)
     
-    _,threshed = cv2.threshold(dilation, 90, 255, cv2.THRESH_BINARY)
+    _,threshed = cv2.threshold(dilation, 150, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(threshed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # import matplotlib.pyplot as plt
-    # import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     
     rects = [cv2.boundingRect(cnt) for cnt in contours]
     filtered_rects = [rect for rect in rects if (rect[2] > 500 and rect[2] < 750 and rect[3] > 200 and rect[3] < 400 and rect[2]/rect[3] > 2)]
     
     if filtered_rects == False or len(filtered_rects) != 1:
         print("couldn't find the rectangle!")
-        return None
     box = filtered_rects[0]
     print(box)
     img = img[box[1]:box[1]+box[3], box[0]:box[0]+box[2]]
@@ -70,40 +66,16 @@ def get_scale_factor(img, max_side_len=1024):
     f = min(max_side_len / img.shape[0], max_side_len / img.shape[0])
     return f if f < 1 else 1
 
-# def increase_contrast(img):
-    
-
 def preprocess(img, imgSize, dataAugmentation=False):
     # "put img into target img of size imgSize, transpose for TF and normalize gray-values"
 
     # there are damaged files in IAM dataset - just use black image instead
     if img is None:
-        img = np.zeros(imgSize[::-1]).astype('float32')
+        img = np.zeros(imgSize[::-1])
 
     # data augmentation
     # img = img.astype(np.float)
-    if dataAugmentation == 'validation':
-        wt, ht = imgSize
-        h, w = img.shape
-        f = min(wt / w, ht / h)
-        tx = (wt - w * f) / 2
-        ty = (ht - h * f) / 2
-        # from matplotlib import pyplot as plt
-        # plt.imshow(img,cmap='gray')
-        # import pdb; pdb.set_trace()
-        # map image into target image
-        M = np.float32([[f, 0, tx], [0, f, ty]])
-        target = np.ones(imgSize[::-1]) * 255 / 2
-        img = cv2.warpAffine(img, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT)
-
-        # transpose for TF
-        img = cv2.transpose(img)
-
-        # convert to range [-1, 1]
-        img = img / 255 - 0.5
-        return img
-
-    elif dataAugmentation == True:
+    if dataAugmentation:
         # photometric data augmentation
         if random.random() < 0.25:
             rand_odd = lambda: random.randint(1, 3) * 2 + 1
@@ -138,14 +110,6 @@ def preprocess(img, imgSize, dataAugmentation=False):
         M = np.float32([[fx, 0, tx], [0, fy, ty]])
         target = np.ones(imgSize[::-1]) * 255 / 2
         img = cv2.warpAffine(img, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT)
-        # transpose for TF
-        img = cv2.transpose(img)
-        # convert to range [-1, 1]
-        
-        # import pdb; pdb.set_trace()
-        # img = img/127.5 - 1
-        img = img / 255 - 0.5
-        return img
 
 
     # no data augmentation
@@ -165,40 +129,10 @@ def preprocess(img, imgSize, dataAugmentation=False):
         f = get_scale_factor(net_img)
         wordnetboxes = [aabb.scale(1 / f, 1 / f) for aabb in wordnetboxes]
         wordboxes = [orig_img[int(aabb.ymin) : int(aabb.ymax), int(aabb.xmin) + 127: int(aabb.xmax) + 127] for aabb in wordnetboxes]
-        print(len(wordboxes))
-
-        def adjust_img(raw_img, img_size):
-            img = raw_img.astype(np.float)
-
-            # increase contrast
-            pxmin = np.min(img)
-            pxmax = np.max(img)
-            imgContrast = (img - pxmin) / (pxmax - pxmin) * 255
-
-            # increase line width
-            kernel = np.ones((3, 3), np.uint8)
-            img = cv2.erode(imgContrast, kernel, iterations = 1)
-
-            wt, ht = imgSize
-            h, w = img.shape
-            f = min(wt / w, ht / h)
-            tx = (wt - w * f) / 2
-            ty = (ht - h * f) / 2
-            M = np.float32([[f, 0, tx], [0, f, ty]])
-            target = np.ones(imgSize[::-1]) * 255 / 2
-            # return cv2.flip(cv2.transpose(cv2.warpAffine(img, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT)),1)
-            return cv2.transpose(cv2.warpAffine(img, M, dsize=imgSize, dst=target, borderMode=cv2.BORDER_TRANSPARENT))
-        adjusted_wordboxes = [adjust_img(box, imgSize) for box in wordboxes]
-        for ad in adjusted_wordboxes:
-            cv2.imwrite(f'data/boxes/{int(time.time())}.jpg',ad)
 
         img = cropRectangle(img)
-        
-        if img is None:
-            return adjusted_wordboxes
         img = img[padding:-padding,padding:-padding]
         img = img.astype(np.float)
-        
         
 
         wt, ht = imgSize
@@ -233,17 +167,13 @@ def preprocess(img, imgSize, dataAugmentation=False):
 
     # transpose for TF
     img = cv2.transpose(img)
-    
     # convert to range [-1, 1]
     
     # import pdb; pdb.set_trace()
     # img = img/127.5 - 1
-    # img = img / 255 - 0.5
-    # cv2.imwrite(f'data/boxes/cropped{int(time.time())}.jpg',img)
-    adjusted_wordboxes.append(img)
-
-    cv2.imwrite(f'data/boxes/rect{int(time.time())}.jpg',img)
-    return adjusted_wordboxes
+    img = img / 255 - 0.5
+    wordboxes.append(img)
+    return wordboxes
 
 
 if __name__ == '__main__':
