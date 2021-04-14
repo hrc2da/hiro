@@ -11,6 +11,7 @@ from nlp_utils import NoteParser
 import string
 import os
 import requests
+import time
 
 hiro = HIRO(mute=True)
 parser = NoteParser()
@@ -32,6 +33,7 @@ k = len(cluster_centers)
 seen = [] #ids of notecards already seen
 allwords = dict() # word -> embedding
 wordorder = [] # list of words in seen order
+embeddingsorder = [] # list of embeddings in order
 cluster_indices = [] # list of cluster assignments in word-seen order
 notecards = dict() # word -> fid
 word2loc = dict() # dictionary of words to cluster locations tuple (x,y)
@@ -263,6 +265,7 @@ try:
 			
 		# add the word vector to the allwords dict
 		allwords[new_word] = new_embedding
+		embeddingsorder.append(new_embedding)
 		wordorder.append(new_word)
 		notecards[new_word] = new_id
 		word2loc[new_word] = new_loc[:2]
@@ -288,7 +291,7 @@ try:
 			# get new clusters and rearrange cards
 			# clusters is a list of lists of words, new_cluster_indices is 
 			# a vector of len=current # of words assinging cluster ids to each word
-			new_cluster_indices, current_clusters = parser.txt2clusters(wordorder,k=k)
+			new_cluster_indices, current_clusters = parser.txt2clusters(wordorder, embeddingsorder, k=k)
 			
 			# should return a new mapping
 			remapped_cluster_indices = alignclusters(cluster_indices, new_cluster_indices)
