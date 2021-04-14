@@ -9,12 +9,14 @@ import sys
 from copy import copy
 from nlp_utils import NoteParser
 import string
+import os
+import requests
 
 hiro = HIRO(mute=True)
 parser = NoteParser()
 temp_photo_path = '/home/pi/hiro/views/view.jpg'
-
-
+runlocal = False
+flask_url = 'https://hiro.ngrok.io'
 
 # test fake clustering
 
@@ -215,19 +217,50 @@ try:
 	while len(allwords.items()) < k*cluster_capacity:
 		# wait for card (blocking)
 		new_id = hiro.find_new_card(seen,reposition=True)
-		new_loc = hiro.localize_notecard(new_id)
-		# when we get a card, parse it to a word vector
 		try:
-			new_word = parser.photo2txt(temp_photo_path).translate(str.maketrans('', '', string.punctuation))
-		except Exception as e:
-			print(f"Couldn't find a word, trying again: {e}")
-			continue
-		try:
-			new_embedding = parser.txt2embedding(new_word)
+			new_loc = hiro.localize_notecard(new_id)
 		except:
-			# for now, if we can't parse the word, do nothing and wait for a new card
-			print(f"Could not find word {new_word} in vocabulary.")
 			continue
+		# when we get a card, parse it to a word vector
+		if runlocal:
+			try:
+				new_word = parser.photo2txt(temp_photo_path).translate(str.maketrans('', '', string.punctuation))
+			except Exception as e:
+				print(f"Couldn't find a word, trying again: {e}")
+				continue
+			try:
+				new_embedding = parser.txt2embedding(new_word)
+			except:
+				# for now, if we can't parse the word, do nothing and wait for a new card
+				print(f"Could not find word {new_word} in vocabulary.")
+				continue
+		else:
+			# send a request for the word (splitting this up in two calls)
+			with open(temp_photo_path, 'rb') as img:
+				img_name = os.path.basename(temp_photo_path)
+				files = {'image': (img_name, img, 'multipart/form-data', {'Expires': '0'})}
+				with requests.Session() as s:
+					word_resp = s.post(f'{flask_url}/photo2emb', files=files)
+					if word_resp.status_code != 200:
+						print(f"Couldn't find a word, trying again")
+						continue
+					else:
+						res = word_resp.json()
+						new_word = res['word']
+						embedding = res['embedding']
+						if embedding is None:
+							print(f"Could not find word {new_word} in vocabulary. {res['err']}")
+							continue
+						else:
+							new_embedding = np.array(res["embedding"])
+							print(f'Recognized {new_word}')
+						# with requestions.Session() as s2:
+						# 	embeddomg_resp = s2.post(f'{flask_url}/txt2embedding', data={})
+						# 	if resp.status_code != '200':
+						# 		print(f"Could not find word {new_word} in vocabulary.")
+						# 		continue
+
+			
 		# add the word vector to the allwords dict
 		allwords[new_word] = new_embedding
 		wordorder.append(new_word)
@@ -370,6 +403,7 @@ try:
 			# 
 
 except KeyboardInterrupt:
+	hiro.shutdown()
 	sys.exit()
 
 hiro.move(np.array([[0], [200], [200]]))
