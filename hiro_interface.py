@@ -328,6 +328,7 @@ class HIRO():
             # divide by number of times card seen to find average
         for card in updated_locs:
             updated_locs[card] = (updated_locs[card][0]/seen_count[card],updated_locs[card][1]/seen_count[card],updated_locs[card][2]/seen_count[card])
+        print(f'sightings: {seen_count}')
         self.project('sweep complete')
         time.sleep(1)
         self.project() # clear projection
