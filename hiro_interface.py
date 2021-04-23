@@ -20,7 +20,7 @@ class HIRO():
         self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=True)
         self.arm.connect()
         self.speed = 200 # speed limit
-        self.ground = 62 + 12 # z value to touch suction cup to ground 
+        self.ground = 65 # z value to touch suction cup to ground 
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not

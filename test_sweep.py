@@ -4,9 +4,9 @@ hiro = HIRO(mute=True)
 
 sweep_result = hiro.sweep()
 
-hiro.pick_place(sweep_result[4], (0,250))
+for loc in sweep_result.items():
+    hiro.pick_place(loc, (0,280))
 
-print(sweep_result)
 
 hiro.disconnect()
 
