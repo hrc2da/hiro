@@ -305,6 +305,7 @@ class HIRO():
         time.sleep(1)
         self.project() # clear projection
         updated_locs = {} # dictionary to be returned
+        seen_count = {} # dictionary to hold number of times each card is seen
         for i,sweep_point in enumerate(sweep_points):
             search_loc = np.array([[sweep_point[0]],[sweep_point[1]],[sweep_height]]) # location to take next picture
             self.move(search_loc) # move to locaiton to take picture
@@ -317,11 +318,16 @@ class HIRO():
                 id = tag.tag_id
                 card_loc = self.localize_notecard(id)
                 if id in updated_locs.keys(): # if card had already been added to dictionary
-                    #average detected locations
-                    updated_locs[id] = (np.average([updated_locs[id][0], card_loc[0]]), np.average([updated_locs[id][1], card_loc[1]]), np.average([updated_locs[id][2], card_loc[2]]))
+                    #sum detected locations
+                    updated_locs[id] = (updated_locs[id][0]+card_loc[0], updated_locs[id][1]+card_loc[1], updated_locs[id][2]+card_loc[2])
+                    seen_count[id] = seen_count[id]+1 # card seen one more time
                 else:
                     # add new card and locaiton to dictionary
                     updated_locs[id] = card_loc
+                    seen_count[id] = 1
+            # divide by number of times card seen to find average
+            for card in updated_locs:
+                updated_locs[card] = (updated_locs[card][0]/seen_count[card],updated_locs[card][1]/seen_count[card],updated_locs[card][2]/seen_count[card])
         self.project('sweep complete')
         time.sleep(1)
         self.project() # clear projection
