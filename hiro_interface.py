@@ -296,7 +296,7 @@ class HIRO():
             return new_id
     
  
-    def sweep(self, sweep_points = [(-230, 50), (-150, 30), (-150, 200), (0, 150), (150, 200), (150, 30), (230, 50)], sweep_height=220):
+    def sweep(self, sweep_points=[(147.0,29.8), (94.9,116.1), (0.0,150.0), (-94.9,116.1), (-147.0,29.8), (-245.0,49.7), (-158.2,193.5), (0.0,250.0), (158.2,193.5), (245.0,49.7)], sweep_height=220):
         # performs sweep over workspace and returns dictionay containing updated locations of cards
         # dictionary entries in form fiducial_ID : (x,y,theta)
         # sweep_points: list of (x,y) tuples for positions to go to in sweep
