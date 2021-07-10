@@ -20,7 +20,7 @@ class HIRO():
         self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=True)
         self.arm.connect()
         self.speed = 200 # speed limit
-        self.ground = 62 + 12 # z value to touch suction cup to ground 
+        self.ground = 65 # z value to touch suction cup to ground 
         self.position = np.array([[0],[150],[150]]) # default start position
         self.arm.set_position(0, 150, 150, speed=self.speed, wait=True) #just to be safe
         self.mute = mute # controls if sounds are made of not
@@ -296,7 +296,7 @@ class HIRO():
             return new_id
     
  
-    def sweep(self, sweep_points = [(-230, 50), (-150, 30), (-150, 200), (0, 150), (150, 200), (150, 30), (230, 50)], sweep_height=240):
+    def sweep(self, sweep_points=[(147.0,29.8), (128.4,77.5), (94.9,116.1), (50.4,141.3), (0.0,150.0), (-50.4,141.3), (-94.9,116.1), (-128.4,77.5), (-147.0,29.8), (-245.0,49.7), (-214.1,129.1), (-158.2,193.5), (-84.0,235.5), (0.0,250.0), (84.0,235.5), (158.2,193.5), (214.1,129.1), (245.0,49.7)], sweep_height=220):
         # performs sweep over workspace and returns dictionay containing updated locations of cards
         # dictionary entries in form fiducial_ID : (x,y,theta)
         # sweep_points: list of (x,y) tuples for positions to go to in sweep
@@ -305,9 +305,11 @@ class HIRO():
         time.sleep(1)
         self.project() # clear projection
         updated_locs = {} # dictionary to be returned
+        seen_count = {} # dictionary to hold number of times each card is seen
         for i,sweep_point in enumerate(sweep_points):
             search_loc = np.array([[sweep_point[0]],[sweep_point[1]],[sweep_height]]) # location to take next picture
             self.move(search_loc) # move to locaiton to take picture
+            time.sleep(0.5) # wait for arm to stop moving
             self.camera.grab()
             time.sleep(0.1)
             cap = self.capture('/home/pi/hiro/views/view.jpg') # take a picture
@@ -317,11 +319,17 @@ class HIRO():
                 id = tag.tag_id
                 card_loc = self.localize_notecard(id)
                 if id in updated_locs.keys(): # if card had already been added to dictionary
-                    #average detected locations
-                    updated_locs[id] = (np.average([updated_locs[id][0], card_loc[0]]), np.average([updated_locs[id][1], card_loc[1]]), np.average([updated_locs[id][2], card_loc[2]]))
+                    #sum detected locations
+                    updated_locs[id] = (updated_locs[id][0]+card_loc[0], updated_locs[id][1]+card_loc[1], updated_locs[id][2]+card_loc[2])
+                    seen_count[id] = seen_count[id]+1 # card seen one more time
                 else:
                     # add new card and locaiton to dictionary
                     updated_locs[id] = card_loc
+                    seen_count[id] = 1
+            # divide by number of times card seen to find average
+        for card in updated_locs:
+            updated_locs[card] = (updated_locs[card][0]/seen_count[card],updated_locs[card][1]/seen_count[card],updated_locs[card][2]/seen_count[card])
+        print(f'sightings: {seen_count}')
         self.project('sweep complete')
         time.sleep(1)
         self.project() # clear projection
