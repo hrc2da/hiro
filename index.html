@@ -1,0 +1,90 @@
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js" integrity="sha512-0XfwGD1nxplHpehcSVI7lY+m/5L37PNHDt+DOc7aLFckwPXjnjeA1oeNbru7YeI4VLs9i+ADnnHEhP69C9CqTA==" crossorigin="anonymous"></script>
+  <script src="https://d3js.org/d3-dispatch.v2.min.js"></script>
+  <script src="https://d3js.org/d3-selection.v2.min.js"></script>
+  <script src="https://d3js.org/d3-drag.v2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.0/math.js"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=New+Tegomin&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=New+Tegomin&family=Roboto:wght@300&display=swap" rel="stylesheet">
+  <style>
+    h1 {
+      font-family: 'New Tegomin', serif;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+    .word {
+      font-family: 'New Tegomin', serif;
+      font-weight: bold;
+      font-size: 12px;
+      pointer-events: none;
+    }
+    #timer {
+      border: 2px solid black;
+      border-radius: 10px;
+      text-align: center;
+      background-color:azure;
+      padding: 2px;
+      width: 120px;
+    }
+    
+  </style>
+</head>
+
+<body>
+    <h1>HIRO's Idea Board</h1>
+    
+    <!-- <h2>Prompt: Why is brainstorming with a robot different than working with a smart idea board?</h2> -->
+    <!-- <h2>Prompt: Design a core curriculum for an Information Science degree, consisting of a sequence of between 6-8 classes.</h2> -->
+    <!-- <h2>Prompt: Design a career for yourself.</h2> -->
+    <!-- <ol>
+      <li>Brainstorming: Use the tool below to brainstorm and diagram ideas for the curriculum. You can type concepts or words onto notes, and HIRO will arrange them for you.</li>
+      <li>Designing: Define your sequence of core classes and write up a brief description</li>
+    </ol> -->
+    <!-- <div id='timer'>Time Left: 10:00</div> -->
+    <svg id='workspace' width='1900px' height='1900px'>
+    <!-- <div id='deckspace'> -->
+      <svg id = 'deckspace' width='600px' height='200px'>
+        <text x="15" y="15">HIRO's Notecards</text>
+        <text x="250" y="15">My Notecards</text>
+        <g id ="hirodeck">
+          <rect x='0' y='30' width='200px' height='150px' fill='#ffff99' stroke='#000000' stroke-width='2' />
+          <text x='95' y='75' id="nextHiroCard" text-anchor="middle" class="word">Hello</text>
+        </g>
+        <g id="userdeck">
+          <rect x='255' y='30' width='200px' height='150px' fill='#ffff99' stroke='#000000' stroke-width='2' />
+          <text x='260' y='75' test-anchor="middle" id="nextUserCard" class="word">Hello</text>
+        </g>
+      </svg>
+    </svg>
+    <!-- </div> -->
+    <!-- <div id='clusters'> -->
+      <!-- <h4>Cluster 1</h4>
+      <div id='cluster1'></div>
+      <h4>Cluster 2</h4>
+      <div id='cluster2'></div>
+      <h4>Cluster 3</h4>
+      <div id='cluster3'></div> -->
+    <!-- </div> -->
+    <!-- <h3>Add a Note to the Board</h3> -->
+    <!-- <form action="txt2embedding" method=post>
+        <input id="word_input" type=text name=word>
+        <input id="add_text" type=submit value="Add Word">        
+    </form> -->
+
+
+    <!-- <h3>Upload a Photo to Scan</h3>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input id="upload_file" type=submit value=Upload>
+    </form> -->
+    <!-- <script src="static/js/quotes.js"></script> -->
+    <script src="static/js/scatter.js"></script>
+    <script src="static/js/quotes.js"></script>
+    <!-- <script src="static/js/timer.js"></script> -->
+
+
+
+</body>

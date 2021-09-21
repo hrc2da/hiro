@@ -14,6 +14,6 @@ for z in heights:
     hiro.move(np.array([[0], [200], [z]]))
     #print(z)
     time.sleep(0.5) # wait for arm to stop shaking
-    hiro.capture('/home/pi/Desktop/calibration/%d.jpg' % z)
+    hiro.capture('/home/pi/Desktop/calibration/%d.jpg' % z, raw=False)
 
 hiro.disconnect()
