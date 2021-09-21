@@ -1,0 +1,11 @@
+# original
+pyuarm - INFO - Servo 0 INTERCEPT: -29.16, SLOPE: 0.35, MANUAL: -2.66
+pyuarm - INFO - Servo 1 INTERCEPT: 167.09, SLOPE: -0.19, MANUAL: -10.0
+pyuarm - INFO - Servo 2 INTERCEPT: -34.12, SLOPE: 0.37, MANUAL: -6.0
+pyuarm - INFO - Servo 3 INTERCEPT: -45.41, SLOPE: 0.48, MANUAL: 0.0
+
+# modified rot manual offset
+pyuarm - INFO - Servo 0 INTERCEPT: -29.16, SLOPE: 0.35, MANUAL: -6.5
+pyuarm - INFO - Servo 1 INTERCEPT: 167.09, SLOPE: -0.19, MANUAL: -10.0
+pyuarm - INFO - Servo 2 INTERCEPT: -34.12, SLOPE: 0.37, MANUAL: -6.0
+pyuarm - INFO - Servo 3 INTERCEPT: -45.41, SLOPE: 0.48, MANUAL: 0.0

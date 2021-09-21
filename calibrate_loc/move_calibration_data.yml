@@ -1,0 +1,64 @@
+- !!python/tuple
+  - !!python/tuple
+    - -300
+    - 0
+    - 15
+  - - -277.4
+    - 0.0
+    - 19.09
+- !!python/tuple
+  - !!python/tuple
+    - -300
+    - 100
+    - 15
+  - - -287.91
+    - 58.99
+    - 14.87
+- !!python/tuple
+  - !!python/tuple
+    - -300
+    - 150
+    - 10
+  - - -295.73
+    - 104.51
+    - 15.73
+- !!python/tuple
+  - !!python/tuple
+    - -250
+    - 0
+    - 25
+  - - -222.41
+    - 0.0
+    - 27.47
+- !!python/tuple
+  - !!python/tuple
+    - -250
+    - 50
+    - 25
+  - - -228.33
+    - 24.37
+    - 22.37
+- !!python/tuple
+  - !!python/tuple
+    - -250
+    - 100
+    - 25
+  - - -236.09
+    - 67.86
+    - 23.82
+- !!python/tuple
+  - !!python/tuple
+    - -250
+    - 150
+    - 20
+  - - -248.67
+    - 110.3
+    - 22.83
+- !!python/tuple
+  - !!python/tuple
+    - -250
+    - 200
+    - 20
+  - - -257.63
+    - 159.77
+    - 16.97
