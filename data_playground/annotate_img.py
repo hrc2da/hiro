@@ -1,7 +1,9 @@
 import cv2
 import glob
 import json
+import sys
 
+labelfile = 'bb5.json'
 # run through a directory of images, record bounding boxes on each
 
 #building on https://www.pyimagesearch.com/2015/03/09/capturing-mouse-click-events-with-python-and-opencv/
@@ -42,9 +44,20 @@ def click_and_annotate(event, x, y, flags, param):
 		annotating = False
 
 
-imgs = glob.glob('imgs/*.jpg')
-annotations = dict()
-for img in imgs:
+imgs = glob.glob('imgs5/imgs/*.jpg')
+imgs.sort()
+
+try:
+	with open(f'labels/{labelfile}', 'r') as infile:
+		annotations = json.load(infile)
+except:
+	annotations = dict()
+if annotations is None:
+	annotations = dict()
+capFlag = False
+for num, img in enumerate(imgs):
+	if img in annotations:
+		continue
 	refPt = []
 	boxes = []
 	annotating = False
@@ -56,14 +69,14 @@ for img in imgs:
 	cv2.namedWindow("image")
 	cv2.setMouseCallback("image", click_and_annotate)
 	# keep looping until the 'q' key is pressed
-	msg = "Click and drag to draw an annotation box."
+	msg = f"{num}/{len(imgs)}: Click and drag to draw an annotation box."
 	cv2.putText(image,msg,(50,650),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
 	while True:
 		# display the image and wait for a keypress
 		cv2.imshow("image", image)
 		key = cv2.waitKey(0) & 0xFF
 		if labeling:
-			if key == ord('/'):
+			if key == ord('/') or key == 13:
 				labeling = False
 				boxes.append((label,refPt[0],refPt[1]))
 				refPt = []
@@ -71,9 +84,11 @@ for img in imgs:
 				label = ''
 				image = tempclone.copy()
 				clone = image.copy()
+				with open('labels/{labelfile}', 'w+') as outfile:
+					json.dump(annotations,outfile)
 				msg = f"{oldlabel} saved."
 				cv2.putText(image,msg,(50,550),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
-				msg = "Click and drag to draw an annotation box, or n for next."
+				msg = f"{num}/{len(imgs)}: Click and drag to draw an annotation box, or n for next."
 				cv2.putText(image,msg,(50,650),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
 			elif key == ord('\\'):
 				label = ''
@@ -81,20 +96,27 @@ for img in imgs:
 				msg = f'Enter label: {label}'
 				cv2.putText(image,msg,(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
 				cv2.putText(image,"Press \\ to clear or / to save.",(50,100),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
+			elif key == 225: #left shift
+				capFlag = True
+				continue #skip the cap flag reset at the end
 			else:
-				label+=chr(key)
+				ch = chr(key)
+				if capFlag:
+					ch = ch.upper()
+				label+=ch
 				image = tempclone.copy()
 				msg = f'Enter label: {label}'
 				cv2.putText(image,msg,(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
 				cv2.putText(image,"Press \\ to clear or / to save.",(50,100),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
+			capFlag = False
 		else:
 			# if the 'r' key is pressed, reset the cropping region
 			if key == ord("r"):
 				image = clone.copy()
 				if len(boxes) <1:
-					msg = "Click and drag to draw an annotation box."
+					msg = f"{num}/{len(imgs)}: Click and drag to draw an annotation box."
 				else:
-					msg = "Click and drag to draw an annotation box, or n for next."
+					msg = f"{num}/{len(imgs)}: Click and drag to draw an annotation box, or n for next."
 				cv2.putText(image,msg,(50,650),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),2,cv2.LINE_AA)
 			# if the 's' key is pressed, save the annotation
 			elif key == ord("s"):
@@ -108,6 +130,13 @@ for img in imgs:
 			elif key == ord("n"):
 				annotations[img] = boxes
 				break
+			elif key == ord("q"):
+				cv2.destroyAllWindows()
+				with open(f'labels/{labelfile}', 'w+') as outfile:
+					json.dump(annotations,outfile)
+				sys.exit(0)
+				
+				
 # if there are two reference points, then crop the region of interest
 # from teh image and display it
 # if len(refPt) == 2:
@@ -117,5 +146,5 @@ for img in imgs:
 # close all open windows
 cv2.destroyAllWindows()
 print(annotations)
-with open('labels/bb.json', 'w+') as outfile:
+with open(f'labels/{labelfile}', 'w+') as outfile:
 	json.dump(annotations,outfile)
