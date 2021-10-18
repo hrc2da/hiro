@@ -498,7 +498,8 @@ class HIROLightweight():
         i = 0
         new_moves = moves
         dummy_moves = []
-        while i < len(new_moves):
+        total_cycles = 0
+        while i < len(new_moves) and total_cycles < 1000 :
             print(i)
             fid_i, source_i, destination_i = new_moves[i]
             last_overlap = i
@@ -526,6 +527,9 @@ class HIROLightweight():
                     new_moves = new_moves[:i] + new_moves[i+1:last_overlap+1] + [new_moves[i]] + new_moves[last_overlap+1:]
             else:
                 i += 1
+        
+        if i < len(new_moves):
+            return [-1]
         # add all the dummy move endings in reverse order (we are picking up off a stack)
         if len(dummy_moves) > 0:
             new_moves = new_moves + list(reversed(dummy_moves))
@@ -534,12 +538,13 @@ class HIROLightweight():
 
 
 
-    def wait_for_card(self, loading_zone=[(-300,0),(-200,100)], timeout=None):
+    def wait_for_card(self, loading_zone=[(-300,0),(-200,100)], timeout=None, focus_threshold = 5):
         '''
         Wait for a card to show up in the loading zone
         '''
         time_started = time.time()
         zone_mask = None
+        old_fmap = None
         while True:
             if timeout is not None:
                 if time.time() - time_started > timeout:
@@ -548,6 +553,12 @@ class HIROLightweight():
             fmap = self.get_fiducial_map(mask=zone_mask)#(1200,1500,500,500))
             print(f"{(time.time()-start)} s")
             print(fmap)
+            if old_fmap is None:
+                old_fmap = fmap
+            else:
+                if fmap == {} and len(old_fmap) > focus_threshold:
+                    return -1
+            
             print("checking for zone")
             for fid,loc in fmap.items():
                 if self.checkzone(loc, loading_zone):
