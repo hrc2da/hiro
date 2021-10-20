@@ -23,20 +23,59 @@ while True:
     r = requests.post(Config.API_URL+'/addnote', json={"encoding_type":"rgb" ,"new_note": note, "notes": cur_notes, "locs": cur_locs, "operations": ["add","split"]})
     res = r.json()
     # + [0] is for rotation
+    # new_loc_dict = {res['notes'][i]:res['locs'][i]+[0] for i in range(len(res['notes']))}
+    # adds,moves,removes,invalids = hiro.getmoves(new_loc_dict, fmap, add_fid=new_card, dummy_spot=[-200,75,0])
+    # print(f"adds:{adds}")
+    # print(f"moves:{moves}")
+    # print(f"removes:{removes}")
+    # print(f"invalids:{invalids}")
+    # for fid,start,stop in moves:
+    #     hiro.move(np.array([[0],[200],[200]]))
+    #     hiro.pick_place(start, stop)
+    # assert len(adds) < 2 # assuming we can only add from one location
+    # if len(adds) == 1:
+    #     fid,stop = adds[0]
+    #     hiro.pick_place(loc,stop)
+    # print(r.json())
+
     new_loc_dict = {res['notes'][i]:res['locs'][i]+[0] for i in range(len(res['notes']))}
-    adds,moves,removes,invalids = hiro.getmoves(new_loc_dict, fmap, add_fid=new_card, dummy_spot=[-200,75,0])
+	adds,moves,removes,invalids = hiro.getmoves(new_loc_dict, fmap, add_fid=new_card, dummy_spot=[-200,75,0])
     print(f"adds:{adds}")
     print(f"moves:{moves}")
     print(f"removes:{removes}")
     print(f"invalids:{invalids}")
-    for fid,start,stop in moves:
-        hiro.move(np.array([[0],[200],[200]]))
-        hiro.pick_place(start, stop)
-    assert len(adds) < 2 # assuming we can only add from one location
-    if len(adds) == 1:
-        fid,stop = adds[0]
-        hiro.pick_place(loc,stop)
-    print(r.json())
+
+    n_tries = 3
+	cur_moves = moves
+	while cur_moves != [] and n_tries > 0:
+		for fid,start,stop in cur_moves:
+			hiro.move(np.array([[0],[200],[200]]))
+			move_result = hiro.pick_place(start, stop)
+		
+		check_fiducials = hiro.get_fiducial_map(mask=zone_mask)
+		_, cur_moves, _, _ = hiro.getmoves(new_loc_dict, check_fiducials, add_fid=new_card, dummy_spot=[-200,75,0])
+		print("New moves to try due to failures: ")
+		print(cur_moves)
+		n_tries -= 1
+	if cur_moves == []:
+		print("ALL MOVES MADE SUCCESSFULLY")
+	else:
+		print("NOT ALL MOVES SUCCESSFUL")
+		
+	assert len(adds) < 2 # assuming we can only add from one location
+	if len(adds) == 1:
+		n_tries = 3
+		success = False
+		while not success and n_tries > 0:
+			fid,stop = adds[0]
+			move_result = hiro.pick_place(loc,stop)
+			check_fiducials = hiro.get_fiducial_map(mask=zone_mask)
+			if check_fiducials[fid] != stop:
+				print("MOVE NOT SUCCESFUL, RETRYING")
+				n_tries -= 1
+			else:
+				print("MOVE SUCCESFUL")
+				success = True
     
 
 hiro.shutdown()
