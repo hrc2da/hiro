@@ -4,13 +4,12 @@
 import pyuarm
 import numpy as np
 import cv2
-import numpy as np
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from pupil_apriltags import Detector
 import time
 import math
 import subprocess
-from picamera import PiCamera
+#from picamera import PiCamera
 from undistort import undistort_img
 import pickle as pkl
 import requests
@@ -542,22 +541,31 @@ class HIROLightweight():
         '''
         Wait for a card to show up in the loading zone
         '''
+        ERROR_CAMERA_FOCUS = 5
         time_started = time.time()
         zone_mask = None
-        old_fmap = None
+        old_fmap = {}
+        fmap = {}
         while True:
             if timeout is not None:
                 if time.time() - time_started > timeout:
                     break
             start = time.time()
-            fmap = self.get_fiducial_map(mask=zone_mask)#(1200,1500,500,500))
+            new_map = self.get_fiducial_map(mask=zone_mask)
+            if new_map != fmap:
+                old_fmap = fmap
+                fmap = new_map
             print(f"{(time.time()-start)} s")
             print(fmap)
-            if old_fmap is None:
+            if fmap == {} and len(old_fmap) > focus_threshold:
+                while fmap == {}:
+                    print("CAMERA FOCUS LOST....HUMAN INTERVENTION NEEDED")
+                    fmap = self.get_fiducial_map(mask=zone_mask)
+                    time.sleep(2)
+
                 old_fmap = fmap
-            else:
-                if fmap == {} and len(old_fmap) > focus_threshold:
-                    return -1
+                with open("errors.txt", "a") as f:
+                    f.write(ERROR_CAMERA_FOCUS + "\n")  
             
             print("checking for zone")
             for fid,loc in fmap.items():

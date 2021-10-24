@@ -28,4 +28,3 @@ for img_f in imgs:
         cv2.polylines(img, [pts], False, (0,0,0), 20)
     print(f'Writing image to {os.path.join(os.path.dirname(img_f),"detected",f"{os.path.basename(img_f)}_detected.jpg")}')
     cv2.imwrite(os.path.join(os.path.dirname(img_f),'detected',f'{os.path.basename(img_f)}_detected.jpg'), img)
-
