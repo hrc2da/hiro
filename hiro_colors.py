@@ -19,6 +19,8 @@ ERROR_PNP_FALSE = 2
 ERROR_MOVE_SORT = 3
 MAX_TRIES = 2
 
+error_file_name = "error_log " + str(datetime.datetime.now()).split('.')[0] + ".txt"
+
 while True:
     error_log = {}
     error_count = 1
@@ -57,7 +59,7 @@ while True:
         relevant_error = {"previous_fmap": check_fiducials, "next_fmap": new_loc_dict}
         error_log[error_count] = {
             "id": ERROR_MOVE_SORT,
-            "timestamp": str(datetime.datetime.now()).split('.')[0]
+            "timestamp": str(datetime.datetime.now()).split('.')[0],
             "extra": relevant_error
         }
         error_count += 1
@@ -75,13 +77,13 @@ while True:
             hiro.move(np.array([[0],[200],[200]]))
             move_result = hiro.pick_place(start, stop)
             if move_result == False:
-                    relevant_error = {"start_loc": start, "end_loc": stop}
-                    error_log[error_count] = {
-                        "id": ERROR_PNP_FALSE,
-                        "timestamp": str(datetime.datetime.now()).split('.')[0]
-                        "extra": relevant_error
-                    }
-                    error_count += 1
+                relevant_error = {"start_loc": start, "end_loc": stop}
+                error_log[error_count] = {
+                    "id": ERROR_PNP_FALSE,
+                    "timestamp": str(datetime.datetime.now()).split('.')[0],
+                    "extra": relevant_error
+                }
+                error_count += 1
                 invalid_set.add((tuple(start), tuple(stop)))
             
         check_fiducials = hiro.get_fiducial_map(mask=None)
@@ -90,7 +92,7 @@ while True:
             relevant_error = {"previous_fmap": check_fiducials, "next_fmap": new_loc_dict}
             error_log[error_count] = {
                 "id": ERROR_MOVE_SORT,
-                "timestamp": str(datetime.datetime.now()).split('.')[0]
+                "timestamp": str(datetime.datetime.now()).split('.')[0],
                 "extra": relevant_error
             }
             error_count += 1
@@ -105,7 +107,7 @@ while True:
                 }
                 error_log[error_count] = {
                     "id": ERROR_PNP_LOC,
-                    "timestamp": str(datetime.datetime.now()).split('.')[0]
+                    "timestamp": str(datetime.datetime.now()).split('.')[0],
                     "extra": relevant_error
                 }
       
@@ -122,16 +124,26 @@ while True:
             check_fiducials = hiro.get_fiducial_map(mask=None)
             if fid not in check_fiducials:
                 cur_tries = MAX_TRIES
+            
             elif np.linalg.norm(np.array(check_fiducials[fid][:2])-np.array(stop[:2])) > CHANGE_THRESHOLD:
                 temp_loc = check_fiducials[fid]
-                with open("errors.txt", "a") as f:
-                    f.write(str(ERROR_PNP_LOC) + "\n")
+                relevant_error = {
+                    "start_fmap": fmap,
+                    "end_fmap": check_fiducials,
+                    "desired_fmap": new_loc_dict  
+                }
+                error_log[error_count] = {
+                    "id": ERROR_PNP_LOC,
+                    "timestamp": str(datetime.datetime.now()).split('.')[0],
+                    "extra": relevant_error
+                }
                 cur_tries += 1
             else:
                 success = True
     
-    with open("errors.txt", "a") as f:
-        json.dump(error_log, f)
+    if error_log != {}:
+        with open(error_file_name, "a") as f:
+            json.dump(error_log, f)
 
     
 hiro.shutdown()
