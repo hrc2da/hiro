@@ -68,7 +68,7 @@ class HIROLightweight():
     api_url = Config.API_URL
     def __init__(self, mute=False, projector=True):
         #uArm
-        self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=False)
+        self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=True)
         
         self.arm.connect()
         
@@ -401,7 +401,7 @@ class HIROLightweight():
         '''
         self.move(search_pos, wait=True)
         time.sleep(3) # stabilize before taking photo
-        frame = self.capture(raw=True,imagepath="temp.jpg")
+        frame = self.capture(raw=True,imagepath="temp_00000.jpg")
         if mask is not None:
             x,y,w,h = mask
             black_frame = np.zeros(frame.shape, dtype=np.uint8)
@@ -498,7 +498,19 @@ class HIROLightweight():
         new_moves = moves
         dummy_moves = []
         total_cycles = 0
-        while i < len(new_moves) and total_cycles < 1000 :
+
+        found_spot = False
+        while found_spot == False:
+            found_spot = True
+            good_dummy_spot = [np.random.randint(-200, 100), np.random.randint(-200, 100), 0]
+            for _, source, destination in new_moves:
+                if np.linalg.norm(np.array(destination[:2])-np.array(good_dummy_spot[:2])) < threshold or np.linalg.norm(np.array(source[:2])-np.array(good_dummy_spot[:2])) < threshold:
+                        found_spot = False
+                        break
+            
+        print(good_dummy_spot)
+
+        while i < len(new_moves) and total_cycles < 1000:
             print(i)
             fid_i, source_i, destination_i = new_moves[i]
             last_overlap = i
@@ -515,8 +527,8 @@ class HIROLightweight():
                 if np.linalg.norm(np.array(destination_target[:2])-np.array(source_i[:2])) < threshold:
                     print("too close: dummy swapping")
                     # dummy_spot = next(dummy_generator)
-                    dummy_move_start = [fid_i, source_i, dummy_spot]
-                    dummy_move_end = [fid_i, dummy_spot, destination_target]
+                    dummy_move_start = [fid_i, source_i, good_dummy_spot]
+                    dummy_move_end = [fid_i, good_dummy_spot, destination_target]
                     # new_moves = moves[:i] + [dummy_move_start] + moves[i+1:last_overlap] + [dummy_move_end] + moves[last_overlap+1:]
                     new_moves = new_moves[:i] + [dummy_move_start] + new_moves[i+1:] # replace moves[i]
                     dummy_moves.append(dummy_move_end)
@@ -526,6 +538,8 @@ class HIROLightweight():
                     new_moves = new_moves[:i] + new_moves[i+1:last_overlap+1] + [new_moves[i]] + new_moves[last_overlap+1:]
             else:
                 i += 1
+            
+            total_cycles += 1
         
         if i < len(new_moves):
             return [-1]
@@ -552,11 +566,13 @@ class HIROLightweight():
                     break
             start = time.time()
             new_map = self.get_fiducial_map(mask=zone_mask)
-            if new_map != fmap:
+            if new_map.keys() != fmap.keys():
                 old_fmap = fmap
-                fmap = new_map
+
+            fmap = new_map
             print(f"{(time.time()-start)} s")
             print(fmap)
+            print(old_fmap)
             if fmap == {} and len(old_fmap) > focus_threshold:
                 while fmap == {}:
                     print("CAMERA FOCUS LOST....HUMAN INTERVENTION NEEDED")
@@ -565,7 +581,7 @@ class HIROLightweight():
 
                 old_fmap = fmap
                 with open("errors.txt", "a") as f:
-                    f.write(ERROR_CAMERA_FOCUS + "\n")  
+                    f.write(str(ERROR_CAMERA_FOCUS) + "\n")  
             
             print("checking for zone")
             for fid,loc in fmap.items():
