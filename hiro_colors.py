@@ -56,7 +56,7 @@ while True:
     new_loc_dict = {res['notes'][i]:res['locs'][i]+[0] for i in range(len(res['notes']))}
     adds,moves,removes,invalids = hiro.getmoves(new_loc_dict, fmap, add_fid=new_card, dummy_spot=[-200,75,0], threshold=MOVE_THRESHOLD)
     if moves == [-1]:
-        relevant_error = {"previous_fmap": check_fiducials, "next_fmap": new_loc_dict}
+        relevant_error = {"previous_fmap": fmap, "next_fmap": new_loc_dict}
         error_log[error_count] = {
             "id": ERROR_MOVE_SORT,
             "timestamp": str(datetime.datetime.now()).split('.')[0],
