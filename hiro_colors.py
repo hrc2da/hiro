@@ -19,15 +19,25 @@ ERROR_PNP_FALSE = 2
 ERROR_MOVE_SORT = 3
 MAX_TRIES = 2
 
-error_file_name = "error_log " + str(datetime.datetime.now()).split('.')[0] + ".txt"
-
+log_file_name = "general_log " + str(datetime.datetime.now()).split('.')[0] + ".json"
+gen_log = {}
+iteration = 0
 while True:
+    gen_log[iteration] = {}
     error_log = {}
-    error_count = 1
+    cur_log = {}
+    error_count = 0
     print("looping")
     # spin until you detect a fiducial in the "new card zone"
     result = hiro.wait_for_card(loading_zone=add_zone, focus_threshold = FOCUS_THRESHOLD)
     new_card, loc, fmap = result
+
+    cur_log["start"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0]
+        "cur_fmap": fmap,
+        "added_card": new_card,
+        "card_location": loc
+    }
     # get the notes for the new card and map and POST the new word to the api to update the diagram
     note = int(new_card)
     cur_cards = list(fmap.keys())
@@ -69,6 +79,13 @@ while True:
     print(f"removes:{removes}")
     print(f"invalids:{invalids}")
 
+    cur_log["moves"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0]
+        "adds": adds,
+        "moves": moves,
+        "removes": removes,
+        "invalids": invalids
+    }
     cur_tries = 0
     cur_moves = moves
     invalid_set = set()
@@ -140,10 +157,18 @@ while True:
                 cur_tries += 1
             else:
                 success = True
-    
-    if error_log != {}:
-        with open(error_file_name, "a") as f:
-            json.dump(error_log, f)
+    cur_log["end"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
+        "end_fmap": check_fiducials
+    }
+
+    cur_log["errors"] = error_log
+
+    gen_log[iteration] = cur_log
+    with open(log_file_name, "w") as f:
+        json.dump(gen_log, f)
+
+    iteration += 1
 
     
 hiro.shutdown()
