@@ -18,6 +18,9 @@ ERROR_PNP_LOC = 1
 ERROR_PNP_FALSE = 2
 ERROR_MOVE_SORT = 3
 MAX_TRIES = 2
+add_zone = [(-350,-100),(-200,100)]
+OFFSET_X = -5 #-15 #Magic Number
+OFFSET_Y = 20 #Magic Number
 
 log_file_name = "general_log " + str(datetime.datetime.now()).split('.')[0] + ".json"
 gen_log = {}
@@ -31,9 +34,9 @@ while True:
     # spin until you detect a fiducial in the "new card zone"
     result = hiro.wait_for_card(loading_zone=add_zone, focus_threshold = FOCUS_THRESHOLD)
     new_card, loc, fmap = result
-
+    loc = (loc[0] + OFFSET_X, loc[1] + OFFSET_Y, loc[2])
     cur_log["start"] = {
-        "timestamp": str(datetime.datetime.now()).split('.')[0]
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
         "cur_fmap": fmap,
         "added_card": new_card,
         "card_location": loc
@@ -80,7 +83,7 @@ while True:
     print(f"invalids:{invalids}")
 
     cur_log["moves"] = {
-        "timestamp": str(datetime.datetime.now()).split('.')[0]
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
         "adds": adds,
         "moves": moves,
         "removes": removes,
@@ -159,7 +162,7 @@ while True:
                 success = True
     cur_log["end"] = {
         "timestamp": str(datetime.datetime.now()).split('.')[0],
-        "end_fmap": check_fiducials
+        "end_fmap": hiro.get_fiducial_map(mask=None)
     }
 
     cur_log["errors"] = error_log

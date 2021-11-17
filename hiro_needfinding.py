@@ -20,7 +20,10 @@ FOCUS_THRESHOLD = 5
 ERROR_PNP_LOC = 1
 ERROR_PNP_FALSE = 2
 ERROR_MOVE_SORT = 3
-MAX_TRIES = 2
+MAX_TRIES = 1
+add_zone = [(-350,-100),(-200,100)]
+OFFSET_X = -5 #-15 #Magic Number
+OFFSET_Y = 20 #Magic Number
 ERROR_MOVE_SORT = 3
 error_file_name = "error_log " + str(datetime.datetime.now()).split('.')[0] + ".txt"
 
@@ -30,6 +33,7 @@ while True:
     error_count = 1
     # spin until you detect a fiducial in the "new card zone"
     new_card, loc, fmap = hiro.wait_for_card(loading_zone=add_zone, focus_threshold=FOCUS_THRESHOLD)
+    loc = (loc[0] + OFFSET_X, loc[1] + OFFSET_Y, loc[2])
     # get the notes for the new card and map and POST the new word to the api to update the diagram
     note = fiducial_dict[int(new_card)]
     cur_cards = list(fmap.keys())
@@ -37,7 +41,7 @@ while True:
     cur_notes = [fiducial_dict[int(fid)] for fid in cur_cards]
     cur_locs = [fmap[fid][:2] for fid in cur_cards]
 
-    r = requests.post(Config.API_URL+'/addnote', json={"new_note": note, "notes": cur_notes, "locs": cur_locs, "operations": ["split"]})
+    r = requests.post(Config.API_URL+'/addnote', json={"new_note": note, "notes": cur_notes, "locs": cur_locs, "operations": ["add"]})
     res = r.json()
     # + [0] is for rotation
     new_loc_dict = {notes_dict[res['notes'][i]]:res['locs'][i]+[0] for i in range(len(res['notes']))}
