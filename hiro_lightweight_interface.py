@@ -259,7 +259,7 @@ class HIROLightweight():
             return False
         print("activating pump")
         self.arm.set_pump(True) #grab card
-        time.sleep(1)
+        time.sleep(0.5)
         print(f"Lifting card:{[[start[0]],[start[1]],[self.ground+60]]}")
         if not self.move(np.array([[start[0]],[start[1]],[self.ground+60]]), wrist_mode=0): # lift card up so it doesn't mess up other cards
             return False

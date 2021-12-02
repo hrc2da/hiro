@@ -17,12 +17,12 @@ FOCUS_THRESHOLD = 5
 ERROR_PNP_LOC = 1
 ERROR_PNP_FALSE = 2
 ERROR_MOVE_SORT = 3
-MAX_TRIES = 2
+MAX_TRIES = 1
 add_zone = [(-350,-100),(-200,100)]
 OFFSET_X = -5 #-15 #Magic Number
-OFFSET_Y = 20 #Magic Number
+OFFSET_Y = 25 #Magic Number
 
-log_file_name = "general_log " + str(datetime.datetime.now()).split('.')[0] + ".json"
+log_file_name = "general_log_color " + str(datetime.datetime.now()).split('.')[0] + ".json"
 gen_log = {}
 iteration = 0
 while True:

@@ -6,7 +6,11 @@ import yaml
 import numpy as np
 import datetime
 import json
-with open('fiducial_dict.yaml', 'r') as infile:
+
+# Choose the card set to load by commenting out below:
+# with open('fiducial_dict.yaml', 'r') as infile:
+#     fiducial_dict = yaml.load(infile)
+with open('fiducial_dict_k12.yaml', 'r') as infile:
     fiducial_dict = yaml.load(infile)
 
 notes_dict ={v:k for k,v in fiducial_dict.items()}
@@ -23,17 +27,26 @@ ERROR_MOVE_SORT = 3
 MAX_TRIES = 1
 add_zone = [(-350,-100),(-200,100)]
 OFFSET_X = -5 #-15 #Magic Number
-OFFSET_Y = 20 #Magic Number
-ERROR_MOVE_SORT = 3
-error_file_name = "error_log " + str(datetime.datetime.now()).split('.')[0] + ".txt"
+OFFSET_Y = 25 #Magic Number
 
+log_file_name = "general_log_needfinding " + str(datetime.datetime.now()).split('.')[0] + ".json"
+gen_log = {}
+iteration = 0
 while True:
-    print("looping")
+    gen_log[iteration] = {}
     error_log = {}
-    error_count = 1
+    cur_log = {}
+    error_count = 0
+    print("looping")
     # spin until you detect a fiducial in the "new card zone"
     new_card, loc, fmap = hiro.wait_for_card(loading_zone=add_zone, focus_threshold=FOCUS_THRESHOLD)
     loc = (loc[0] + OFFSET_X, loc[1] + OFFSET_Y, loc[2])
+    cur_log["start"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
+        "cur_fmap": fmap,
+        "added_card": new_card,
+        "card_location": loc
+    }
     # get the notes for the new card and map and POST the new word to the api to update the diagram
     note = fiducial_dict[int(new_card)]
     cur_cards = list(fmap.keys())
@@ -60,6 +73,14 @@ while True:
     print(f"moves:{moves}")
     print(f"removes:{removes}")
     print(f"invalids:{invalids}")
+
+    cur_log["moves"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
+        "adds": adds,
+        "moves": moves,
+        "removes": removes,
+        "invalids": invalids
+    }
 
     cur_tries = 0
     cur_moves = moves
@@ -92,17 +113,16 @@ while True:
         else:
             cur_moves = [i for i in cur_moves if (tuple(i[1]), tuple(i[2])) not in invalid_set]
             if cur_moves != []:
-                if cur_moves != []:
-                    relevant_error = {
-                        "start_fmap": fmap,
-                        "end_fmap": check_fiducials,
-                        "desired_fmap": new_loc_dict  
-                    }
-                    error_log[error_count] = {
-                        "id": ERROR_PNP_LOC,
-                        "timestamp": str(datetime.datetime.now()).split('.')[0],
-                        "extra": relevant_error
-                    }
+                relevant_error = {
+                    "start_fmap": fmap,
+                    "end_fmap": check_fiducials,
+                    "desired_fmap": new_loc_dict  
+                }
+                error_log[error_count] = {
+                    "id": ERROR_PNP_LOC,
+                    "timestamp": str(datetime.datetime.now()).split('.')[0],
+                    "extra": relevant_error
+                }
         cur_tries += 1
 
 #    for fid,start,stop in moves:
@@ -140,9 +160,18 @@ while True:
             else:
                 success = True
 
-    if error_log != {}:
-        with open(error_file_name, "a") as f:
-            json.dump(error_log, f)
+    cur_log["end"] = {
+        "timestamp": str(datetime.datetime.now()).split('.')[0],
+        "end_fmap": hiro.get_fiducial_map(mask=None)
+    }
+
+    cur_log["errors"] = error_log
+    gen_log[iteration] = cur_log
+
+    with open(log_file_name, "w") as f:
+        json.dump(gen_log, f)
+
+    iteration += 1
         
 
 hiro.shutdown()
