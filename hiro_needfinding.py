@@ -1,5 +1,6 @@
 from hiro_lightweight_interface import HIROLightweight
 from config import Config
+api_url = Config.NEEDFINDING_API_URL
 import requests
 import cv2
 import yaml
@@ -15,7 +16,7 @@ with open('fiducial_dict_k12.yaml', 'r') as infile:
 
 notes_dict ={v:k for k,v in fiducial_dict.items()}
 # instantiate a HIRO object
-hiro = HIROLightweight()
+hiro = HIROLightweight(api_url=api_url)
 add_zone = [(-300,-50),(-200,100)]
 
 MOVE_THRESHOLD = 15
@@ -54,7 +55,7 @@ while True:
     cur_notes = [fiducial_dict[int(fid)] for fid in cur_cards]
     cur_locs = [fmap[fid][:2] for fid in cur_cards]
 
-    r = requests.post(Config.API_URL+'/addnote', json={"new_note": note, "notes": cur_notes, "locs": cur_locs, "operations": ["add"]})
+    r = requests.post(api_url+'/addnote', json={"new_note": note, "notes": cur_notes, "locs": cur_locs, "operations": ["add"]})
     res = r.json()
     # + [0] is for rotation
     new_loc_dict = {notes_dict[res['notes'][i]]:res['locs'][i]+[0] for i in range(len(res['notes']))}

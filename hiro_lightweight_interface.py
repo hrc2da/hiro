@@ -65,11 +65,15 @@ class HIROLightweight():
     #calibration for detection (fish-eyed distortion fix) and locomotion --> linear regressor on data
     move_calibration_file = "random_forest_locomotion_regressor.pkl"
     view_calibration_file = "random_forest_view_regressor.pkl"
-    api_url = Config.API_URL
-    def __init__(self, mute=False, projector=True):
+    
+    def __init__(self, api_url=None, mute=False, projector=True):
+        if api_url is None:
+            self.api_url = Config.FALLBACK_API_URL
+        else:
+            self.api_url = api_url
         #uArm
         self.arm = pyuarm.UArm(debug=False,mac_address='FC:45:C3:24:76:EA', ble=True)
-        
+            
         self.arm.connect()
         
         self.speed = 200 # speed limit
